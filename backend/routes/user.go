@@ -23,6 +23,7 @@ func getAllUsers(c *gin.Context) {
 	var users []models.User
 	if err := database.DB.Find(&users).Error; err != nil{
 		c.JSON(http.StatusInternalServerError, gin.H {"Error": "Database Error"})
+		return
 	}
 	c.JSON(http.StatusOK, users)
 }

@@ -26,7 +26,33 @@ type Item struct {
 	Text string `json:"text"`
 	Image string `json:"image"`
 	// TierID int `json:"tier_id"` // This is not needed for now
-	TierText string `json:"tier_text"`
+	TierText string `gorm:"default:U" json:"tier_text"`
 	// Tier Tier `gorm:"foreignKey:TierID"` // This is not needed for now
 	Tierlist Tierlist `gorm:"foreignKey:TierlistID"`
+}
+
+// POST & PUT /tierlist structs
+
+type TierRequest struct {
+	Name string `json:"text" binding:"required"`
+	Colour string `json:"colour" binding:"required"`
+}
+
+type ItemRequest struct {
+	Text string `json:"text" binding:"required"`
+	Image string `json:"image" binding:"required"`
+	Tier string `json:"tier" binding:"required"`
+}	
+
+type TierlistRequest struct {
+	Name string `json:"name" binding:"required"`
+	Description string `json:"description" binding:"required"`
+	Tiers []TierRequest `json:"tiers" binding:"required"`
+	Items []ItemRequest `json:"items" binding:"required"`
+	Creator int `json:"creator_id" binding:"required"` // placeholder for now
+}
+
+type UpdateTierlistRequest struct {
+	Tiers []TierRequest `json:"tiers" binding:"required"`
+	Items []ItemRequest `json:"items" binding:"required"`
 }
