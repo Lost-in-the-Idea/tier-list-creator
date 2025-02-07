@@ -10,5 +10,6 @@ import (
 func SetupRoutes(r *gin.Engine) {
 	routes.SetupTierlistRoutes(r)
 	routes.SetupUserRoutes(r)
+	routes.SetupAuthenticationRoutes(r)
 	
 }
