@@ -6,11 +6,13 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"tierlist/database"
+	"tierlist/middleware"
 	"tierlist/models"
 )
 
 func SetupTierlistRoutes (r *gin.Engine) {
 	tierlist := r.Group("/tierlist")
+	tierlist.Use(middleware.AuthRequired())
 
 	tierlist.GET("/", getAllTierlists)
 	tierlist.GET("/:id", getTierlistById)

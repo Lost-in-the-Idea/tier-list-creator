@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"tierlist/database"
+	"tierlist/middleware"
 	"tierlist/models"
 	"time"
 
@@ -41,7 +42,11 @@ func SetupAuthenticationRoutes(r *gin.Engine) {
 	authentication := r.Group("/auth")
 	authentication.GET("/discord/redirect", handleDiscordRedirect)
 	authentication.GET("/discord/callback", handleDiscordCallback)
-	authentication.GET("/logout", handleLogout)
+
+	protected := authentication.Group("/")
+	protected.Use(middleware.AuthRequired())
+	protected.GET("/logout", handleLogout)
+	protected.GET("/me", getCurrentUser)
 }
 
 func handleDiscordRedirect(c *gin.Context) {
@@ -106,6 +111,7 @@ func handleDiscordCallback(c *gin.Context) {
 	session := models.Session{
 		Token: sessionToken,
 		DiscordID: user.DiscordID,
+		LastUsed: time.Now(),
 		ExpiresAt: time.Now().Add(time.Hour * 168),
 	}
 
@@ -142,4 +148,14 @@ func handleLogout(c *gin.Context) {
 
 	c.SetCookie("session_token", "", -1, "/", "localhost", false, true)
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
+}
+
+func getCurrentUser(c *gin.Context) {
+    user, exists := c.Get("user")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+        return
+    }
+    
+    c.JSON(http.StatusOK, gin.H{"user": user})
 }

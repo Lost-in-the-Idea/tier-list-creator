@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"tierlist/database"
+	"tierlist/middleware"
 	"tierlist/models"
 
 	"github.com/gin-gonic/gin"
@@ -11,6 +12,7 @@ import (
 
 func SetupUserRoutes(r *gin.Engine) {
 	users := r.Group("/users")
+	users.Use(middleware.AuthRequired())
 
 	users.GET("/", getAllUsers) 
 	users.GET("/:id", getUserById)
