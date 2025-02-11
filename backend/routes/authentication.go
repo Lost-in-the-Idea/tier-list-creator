@@ -140,5 +140,6 @@ func handleLogout(c *gin.Context) {
 		return
 	}
 
+	c.SetCookie("session_token", "", -1, "/", "localhost", false, true)
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
