@@ -5,8 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"tierlist/database"
+	"tierlist/models"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/ravener/discord-oauth2"
 	"golang.org/x/oauth2"
@@ -37,6 +41,7 @@ func SetupAuthenticationRoutes(r *gin.Engine) {
 	authentication := r.Group("/auth")
 	authentication.GET("/discord/redirect", handleDiscordRedirect)
 	authentication.GET("/discord/callback", handleDiscordCallback)
+	authentication.GET("/logout", handleLogout)
 }
 
 func handleDiscordRedirect(c *gin.Context) {
@@ -73,5 +78,67 @@ func handleDiscordCallback(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"user": userInfo})
+	var user models.User
+	discordID := userInfo["id"].(string)
+	result := database.DB.Where("discord_id = ?", discordID).First(&user)
+	if result.Error != nil {
+		user = models.User{
+			DiscordID: discordID,
+			Username: userInfo["username"].(string),
+			Avatar: userInfo["avatar"].(string),
+			LastLogin: time.Now(),
+		}
+		if err := database.DB.Create(&user).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+			return
+		}
+	} else {
+		user.Username = userInfo["username"].(string)
+		user.Avatar = userInfo["avatar"].(string)
+		user.LastLogin = time.Now()
+		if err := database.DB.Save(&user).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
+			return
+		}
+	}
+
+	sessionToken := uuid.New().String()
+	session := models.Session{
+		Token: sessionToken,
+		DiscordID: user.DiscordID,
+		ExpiresAt: time.Now().Add(time.Hour * 168),
+	}
+
+	if err := database.DB.Create(&session).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create session"})
+		return
+	}
+
+	// set secure flag to true in production
+	c.SetCookie("session_token", sessionToken, 60*60*24*7, "/", "localhost", false, true)
+
+	c.JSON(http.StatusOK, gin.H{"user": user, "session": session})
+
+}
+
+func handleLogout(c *gin.Context) {
+	sessionToken, err := c.Cookie("session_token")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No session token provided"})
+		return
+	}
+
+	var session models.Session
+	result := database.DB.Where("token = ?", sessionToken).First(&session)
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Session not found"})
+		return
+	}
+
+	if err := database.DB.Delete(&session).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete session"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }

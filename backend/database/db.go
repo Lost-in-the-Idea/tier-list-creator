@@ -16,7 +16,7 @@ func ConnectDatabase() {
 		panic("Failed to connect to database")
 	}
 
-	err = db.AutoMigrate(&models.User{}, &models.Tierlist{}, &models.Tier{}, &models.Item{})
+	err = db.AutoMigrate(&models.User{}, &models.Tierlist{}, &models.Tier{}, &models.Item{}, &models.Session{})
 	if err != nil {
 		panic("Failed to migrate database")
 	}
