@@ -41,6 +41,7 @@ func AuthRequired() gin.HandlerFunc {
 		}
 
 		now := time.Now()
+		expiryDuration := time.Hour * 168
 		if err := database.DB.Model(&session).Update("expires_at", now.Add(time.Hour * 168)).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database Error"})
 			c.Abort()
@@ -52,7 +53,8 @@ func AuthRequired() gin.HandlerFunc {
 			return
 		}
 
-
+		// set secure flag to true in production
+		c.SetCookie("session_token", sessionToken, int(expiryDuration.Seconds()), "/", "localhost", false, true)
 		c.Set("user", user)
 		c.Set("session", session)
 		c.Next()
