@@ -3,11 +3,11 @@ package routes
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
-
 	"tierlist/database"
 	"tierlist/middleware"
 	"tierlist/models"
+
+	"github.com/gin-gonic/gin"
 )
 
 func SetupTierlistRoutes (r *gin.Engine) {

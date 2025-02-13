@@ -1,10 +1,13 @@
 import "./App.css";
+import { Frontpage } from "./components/Frontpage";
 
 function App() {
   return (
-    <>
-      <h1 className="text-3xl font-bold underline">Hello World</h1>
-    </>
+    <div className="min-h-screen min-w-[365px] flex items-center flex-col">
+      <div className="max-w-[1280px] p-4 w-full">
+        <Frontpage />
+      </div>
+    </div>
   );
 }
 
