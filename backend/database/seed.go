@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"tierlist/models"
+	"time"
 )
 
 func Seed() {
@@ -105,9 +106,24 @@ func SeedUsers() error {
 	}
 
 	users := []models.User{
-		{Name: "Test 1", Email: "test1@test.com"},
-		{Name: "Test 2", Email: "test2@test.com"},
-		{Name: "Test 3", Email: "test3@test.com"},
+        {
+            DiscordID: "123456789",
+            Username:  "Test User 1",
+            Avatar:    "default1",
+            LastLogin: time.Now(),
+        },
+        {
+            DiscordID: "987654321",
+            Username:  "Test User 2",
+            Avatar:    "default2",
+            LastLogin: time.Now(),
+        },
+        {
+            DiscordID: "456789123",
+            Username:  "Test User 3",
+            Avatar:    "default3",
+            LastLogin: time.Now(),
+        },
 	}
 
 	for _, user := range users {

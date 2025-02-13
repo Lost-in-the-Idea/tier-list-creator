@@ -1,9 +1,16 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type User struct {
-	gorm.Model
-	Name string `json:"name"`
-	Email string `json:"email"`
+    gorm.Model
+    DiscordID    string    `json:"discord_id" gorm:"uniqueIndex"`
+    Username     string    `json:"username"`
+    Avatar       string    `json:"avatar"`
+    LastLogin    time.Time `json:"last_login"`
+    Sessions     []Session `json:"sessions" gorm:"foreignKey:DiscordID;references:DiscordID"`
 }
