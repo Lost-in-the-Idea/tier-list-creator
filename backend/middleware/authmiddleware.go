@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"tierlist/database"
 	"tierlist/models"
+	"tierlist/utilities/cookie"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -27,7 +28,8 @@ func AuthRequired() gin.HandlerFunc {
 
 		if time.Now().After(session.ExpiresAt) {
 			database.DB.Delete(&session)
-			c.SetCookie("session_token", "", -1, "/", "localhost", false, true)
+			// set secure flag to true in production & change local host to domain
+			cookie.SetCookie(c, "session_token", "", 60*60*24*7, "/", "localhost", true, true, http.SameSiteNoneMode)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Session Expired"})
 			c.Abort()
 			return
@@ -53,8 +55,8 @@ func AuthRequired() gin.HandlerFunc {
 			return
 		}
 
-		// set secure flag to true in production
-		c.SetCookie("session_token", sessionToken, int(expiryDuration.Seconds()), "/", "localhost", false, true)
+		// set secure flag to true in production & change local host to domain
+		cookie.SetCookie(c, "session_token", sessionToken, int(expiryDuration), "/", "localhost", true, true, http.SameSiteNoneMode)
 		c.Set("user", user)
 		c.Set("session", session)
 		c.Next()

@@ -8,6 +8,7 @@ import (
 	"tierlist/database"
 	"tierlist/middleware"
 	"tierlist/models"
+	"tierlist/utilities/cookie"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -120,8 +121,8 @@ func handleDiscordCallback(c *gin.Context) {
 		return
 	}
 
-	// set secure flag to true in production
-	c.SetCookie("session_token", sessionToken, 60*60*24*7, "/", "localhost", false, true)
+	// set secure flag to true in production & change local host to domain
+	cookie.SetCookie(c, "session_token", sessionToken, 60*60*24*7, "/", "localhost", true, true, http.SameSiteNoneMode)
 
 	c.JSON(http.StatusOK, gin.H{"user": user, "session": session})
 
@@ -146,7 +147,8 @@ func handleLogout(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("session_token", "", -1, "/", "localhost", false, true)
+	// set secure flag to true in production & change local host to domain
+	cookie.SetCookie(c, "session_token", "", 60*60*24*7, "/", "localhost", true, true, http.SameSiteNoneMode)
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
 
