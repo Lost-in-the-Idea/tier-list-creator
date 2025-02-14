@@ -8,3 +8,7 @@ const api = axios.create({
 export const getAllTierlists = () => {
   return api.get("/tierlist/");
 };
+
+export const whoAmI = () => {
+  return api.get("/auth/me");
+};
