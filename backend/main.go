@@ -2,7 +2,7 @@ package main
 
 import (
 	"tierlist/database"
-	"tierlist/utilities"
+	"tierlist/utilities/routes"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -21,6 +21,6 @@ func main() {
         AllowCredentials: true,
         MaxAge:          12 * time.Hour,
     }))
-	utilities.SetupRoutes(r)
+	routes.SetupRoutes(r)
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
   }

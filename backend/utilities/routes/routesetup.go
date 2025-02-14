@@ -1,4 +1,4 @@
-package utilities
+package routes
 
 import (
 	"tierlist/routes"
