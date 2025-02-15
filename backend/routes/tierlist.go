@@ -30,7 +30,7 @@ func SetupTierlistRoutes (r *gin.Engine) {
 
 func getAllTierlists(c *gin.Context) {
 	var tierlists []models.Tierlist
-	if err := database.DB.Find(&tierlists).Error; err != nil {
+	if err := database.DB.Preload("Tiers").Preload("Items").Find(&tierlists).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"Error": "Database Error"})
 		return
 	}
@@ -40,7 +40,7 @@ func getAllTierlists(c *gin.Context) {
 func getTierlistById(c *gin.Context) {
 	var tierlists []models.Tierlist
 	id := c.Param("id")
-	if err := database.DB.First(&tierlists, id).Error; err != nil {
+	if err := database.DB.Preload("Tiers").Preload("Items").First(&tierlists, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"Error": "Tierlist not found"})
 		return
 	}
