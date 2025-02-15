@@ -16,7 +16,7 @@ type Tier struct {
 	TierlistID int `json:"tierlist_id"`
 	Text string `json:"text"`
 	Colour string `json:"colour"`
-	Tierlist Tierlist `gorm:"foreignKey:TierlistID"`
+	Tierlist Tierlist `gorm:"foreignKey:TierlistID" json:"-"`
 	// Items []Item `gorm:"foreignKey:TierID"` // This is not needed for now
 }
 
@@ -28,7 +28,7 @@ type Item struct {
 	// TierID int `json:"tier_id"` // This is not needed for now
 	TierText string `gorm:"default:U" json:"tier_text"`
 	// Tier Tier `gorm:"foreignKey:TierID"` // This is not needed for now
-	Tierlist Tierlist `gorm:"foreignKey:TierlistID"`
+	Tierlist Tierlist `gorm:"foreignKey:TierlistID" json:"-"`
 }
 
 // POST & PUT /tierlist structs
