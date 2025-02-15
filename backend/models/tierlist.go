@@ -6,8 +6,8 @@ type Tierlist struct {
 	Description string `json:"description"`
 	CreatorID int `json:"creator_id"`
 	Creator User `gorm:"foreignKey:CreatorID" json:"creator"`
-	Tiers []Tier `gorm:"foreignKey:TierlistID" json:"tiers"`
-	Items []Item `gorm:"foreignKey:TierlistID" json:"items"`
+	Tiers []Tier `gorm:"foreignKey:TierlistID;constraint:OnDelete:CASCADE" json:"tiers"`
+	Items []Item `gorm:"foreignKey:TierlistID;constraint:OnDelete:CASCADE" json:"items"`
 	Version int `gorm:"default:1" json:"version"`
 }
 
