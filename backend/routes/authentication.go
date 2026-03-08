@@ -38,8 +38,8 @@ func init() {
 	}
 
 
-func SetupAuthenticationRoutes(r *gin.Engine) {
-	authentication := r.Group("/auth")
+func SetupAuthenticationRoutes(api *gin.RouterGroup) {
+	authentication := api.Group("/auth")
 	authentication.GET("/discord/redirect", handleDiscordRedirect)
 	authentication.GET("/discord/callback", handleDiscordCallback)
 

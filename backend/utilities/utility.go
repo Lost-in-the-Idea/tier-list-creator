@@ -8,8 +8,9 @@ import (
 
 
 func SetupRoutes(r *gin.Engine) {
-	routes.SetupTierlistRoutes(r)
-	routes.SetupUserRoutes(r)
-	routes.SetupAuthenticationRoutes(r)
+	api := r.Group("/api")
+	routes.SetupTierlistRoutes(api)
+	routes.SetupUserRoutes(api)
+	routes.SetupAuthenticationRoutes(api)
 	
 }

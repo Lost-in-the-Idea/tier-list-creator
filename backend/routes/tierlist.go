@@ -9,9 +9,9 @@ import (
 	"tierlist/middleware"
 	"tierlist/models"
 )
-
-func SetupTierlistRoutes (r *gin.Engine) {
-	tierlist := r.Group("/tierlist")
+	
+func SetupTierlistRoutes (api *gin.RouterGroup) {
+	tierlist := api.Group("/tierlist")
 	tierlist.Use(middleware.AuthRequired())
 
 	tierlist.GET("/", getAllTierlists)

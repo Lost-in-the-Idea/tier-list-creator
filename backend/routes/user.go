@@ -10,8 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupUserRoutes(r *gin.Engine) {
-	users := r.Group("/users")
+func SetupUserRoutes(api *gin.RouterGroup) {
+	users := api.Group("/users")
 	users.Use(middleware.AuthRequired())
 
 	users.GET("/", getAllUsers) 
