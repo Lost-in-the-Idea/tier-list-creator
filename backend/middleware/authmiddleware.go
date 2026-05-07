@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AuthRequired() gin.HandlerFunc {
+func AuthRequired(db *database.Database) gin.HandlerFunc {
 	return func (c *gin.Context) {
 		sessionToken, err := c.Cookie("session_token")
 		if err != nil {
@@ -19,14 +19,14 @@ func AuthRequired() gin.HandlerFunc {
 		}
 
 		var session models.Session
-		if err := database.DB.Where("token = ?", sessionToken).First(&session).Error; err != nil {
+		if err := db.DB.Where("token = ?", sessionToken).First(&session).Error; err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			c.Abort()
 			return
 		}
 
 		if time.Now().After(session.ExpiresAt) {
-			database.DB.Delete(&session)
+			db.DB.Delete(&session)
 			c.SetCookie("session_token", "", -1, "/", "localhost", false, true)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Session Expired"})
 			c.Abort()
@@ -34,7 +34,7 @@ func AuthRequired() gin.HandlerFunc {
 		}
 
 		var user models.User
-		if err := database.DB.Where("discord_id = ?", session.DiscordID).First(&user).Error; err != nil {
+		if err := db.DB.Where("discord_id = ?", session.DiscordID).First(&user).Error; err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User Not Found"})
 			c.Abort()
 			return
@@ -42,12 +42,12 @@ func AuthRequired() gin.HandlerFunc {
 
 		now := time.Now()
 		expiryDuration := time.Hour * 168
-		if err := database.DB.Model(&session).Update("expires_at", now.Add(time.Hour * 168)).Error; err != nil {
+		if err := db.DB.Model(&session).Update("expires_at", now.Add(time.Hour * 168)).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database Error"})
 			c.Abort()
 			return
 		}
-		if err := database.DB.Model(&session).Update("last_used", now).Error; err != nil {
+		if err := db.DB.Model(&session).Update("last_used", now).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database Error"})
 			c.Abort()
 			return

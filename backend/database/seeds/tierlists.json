@@ -1,0 +1,125 @@
+[
+  {
+    "name": "Tierlist 1",
+    "description": "This is the first Tierlist",
+    "creator_id": 1,
+    "version": 1,
+    "tiers": [
+      { "text": "S", "colour": "f4ee1d" },
+      { "text": "A", "colour": "d81621" },
+      { "text": "B", "colour": "00bef1" },
+      { "text": "C", "colour": "37f100" },
+      { "text": "D", "colour": "ffffff" },
+      { "text": "F", "colour": "000000" }
+    ],
+    "items": [
+      {
+        "text": "Nacht der Untoten",
+        "image": "https://static.wikia.nocookie.net/callofduty/images/2/2b/Nacht_Der_Untoten_Menu_Selection_WaW.png/revision/latest?cb=20161009103531",
+        "tier_text": "S"
+      },
+      {
+        "text": "Verrückt",
+        "image": "https://static.wikia.nocookie.net/callofduty/images/a/a1/Verruckt_Menu_Selection_WaW.png/revision/latest?cb=20161009103542",
+        "tier_text": "A"
+      },
+      {
+        "text": "Shi No Numa",
+        "image": "https://static.wikia.nocookie.net/callofduty/images/2/2f/Shi_No_Numa_Menu_Selection_WaW.png/revision/latest?cb=20161009103553",
+        "tier_text": "B"
+      },
+      {
+        "text": "Der Riese",
+        "image": "https://static.wikia.nocookie.net/callofduty/images/8/86/Der_Riese_Menu_Selection_WaW.png/revision/latest?cb=20161009103603",
+        "tier_text": "C"
+      },
+      {
+        "text": "Moon",
+        "image": "https://static.wikia.nocookie.net/callofduty/images/c/cc/Moon_Menu_Selection_BO.png/revision/latest?cb=20240710075602",
+        "tier_text": "U"
+      }
+    ]
+  },
+  {
+    "name": "Tierlist 2",
+    "description": "This is the second Tierlist",
+    "creator_id": 2,
+    "version": 1,
+    "tiers": [
+      { "text": "S", "colour": "f4ee1d" },
+      { "text": "A", "colour": "d81621" },
+      { "text": "B", "colour": "00bef1" },
+      { "text": "C", "colour": "37f100" },
+      { "text": "D", "colour": "ffffff" },
+      { "text": "F", "colour": "000000" }
+    ],
+    "items": [
+      {
+        "text": "Green Hill Zone",
+        "image": "https://example.com/green_hill_zone.png",
+        "tier_text": "S"
+      },
+      {
+        "text": "Chemical Plant Zone",
+        "image": "https://example.com/chemical_plant_zone.png",
+        "tier_text": "A"
+      },
+      {
+        "text": "Casino Night Zone",
+        "image": "https://example.com/casino_night_zone.png",
+        "tier_text": "B"
+      },
+      {
+        "text": "Ice Cap Zone",
+        "image": "https://example.com/ice_cap_zone.png",
+        "tier_text": "C"
+      },
+      {
+        "text": "Sky Sanctuary Zone",
+        "image": "https://example.com/sky_sanctuary_zone.png",
+        "tier_text": "U"
+      }
+    ]
+  },
+  {
+    "name": "Tierlist 3",
+    "description": "This is the third Tierlist",
+    "creator_id": 3,
+    "version": 1,
+    "tiers": [
+      { "text": "S", "colour": "f4ee1d" },
+      { "text": "A", "colour": "d81621" },
+      { "text": "B", "colour": "00bef1" },
+      { "text": "C", "colour": "37f100" },
+      { "text": "D", "colour": "ffffff" },
+      { "text": "F", "colour": "000000" }
+    ],
+    "items": [
+      {
+        "text": "Mario",
+        "image": "https://example.com/mario.png",
+        "tier_text": "S"
+      },
+      {
+        "text": "Luigi",
+        "image": "https://example.com/luigi.png",
+        "tier_text": "A"
+      },
+      {
+        "text": "Peach",
+        "image": "https://example.com/peach.png",
+        "tier_text": "B"
+      },
+      {
+        "text": "Bowser",
+        "image": "https://example.com/bowser.png",
+        "tier_text": "C"
+      },
+      {
+        "text": "Yoshi",
+        "image": "https://example.com/yoshi.png",
+        "tier_text": "U"
+      }
+    ]
+  }
+]
