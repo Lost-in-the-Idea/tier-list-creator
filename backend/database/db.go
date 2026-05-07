@@ -2,33 +2,39 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
-	"tierlist/models"
 
-	"gorm.io/driver/sqlite"
+	_ "github.com/jackc/pgx/v5/stdlib"
+
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	_ "modernc.org/sqlite"
 )
 
-var DB *gorm.DB
+type Database struct {
+	DB *gorm.DB
+	SQLDB *sql.DB
+}
 
-func ConnectDatabase() {
-	sqlDB, err := sql.Open("sqlite", "mainframe.db")
+func (db *Database) InitialiseDatabase(DBName string, DBUser string, DBPassword string, DBHost string, DBPort string) error {
+	dsn := "host=" + DBHost + " user=" + DBUser + " password=" + DBPassword + " dbname=" + DBName + " port=" + DBPort + " sslmode=disable"
+	gormDB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		panic("Failed to open database with modernc driver: " + err.Error())
+		return err
 	}
+	db.DB = gormDB
 
-	db, err := gorm.Open(sqlite.New(sqlite.Config{Conn: sqlDB}), &gorm.Config{})
+	sqlDB, err := gormDB.DB()
 	if err != nil {
-		panic("Failed to connect to database: " + err.Error())
+		return err
 	}
+	db.SQLDB = sqlDB
 
-	err = db.AutoMigrate(&models.User{}, &models.Tierlist{}, &models.Tier{}, &models.Item{}, &models.Session{})
+	err = sqlDB.Ping()
 	if err != nil {
-		panic("Failed to migrate database")
+		return err
 	}
+	return nil
+}
 
-	DB = db
-
-	fmt.Print("Connection successful")
+func (db *Database) Close() error {
+	return db.SQLDB.Close()
 }
