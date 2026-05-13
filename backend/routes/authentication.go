@@ -23,11 +23,8 @@ var (
 )
 
 func init() {
-		err := godotenv.Load()
-		if err != nil {
-			panic("Failed to load .env file")
-		}
-		
+		_ = godotenv.Load()
+
 		conf = &oauth2.Config{
 			ClientID:     os.Getenv("DISCORD_CLIENT_ID"),
 			ClientSecret: os.Getenv("DISCORD_CLIENT_SECRET"),
