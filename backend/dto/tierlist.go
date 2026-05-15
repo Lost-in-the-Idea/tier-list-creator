@@ -6,7 +6,7 @@ type CreateTierlistRequest struct {
 	Title       string              `json:"title" binding:"required"`
 	Description string              `json:"description"`
 	ExpiryTime  time.Time           `json:"expiry_time" binding:"required"`
-	Items       []CreateItemRequest `json:"tierlist_items"`
+	Items []CreateItemRequest 		`json:"tierlist_items" binding:"required,min=2,max=15,dive,required"`
 }
 
 type CreateItemRequest struct {
