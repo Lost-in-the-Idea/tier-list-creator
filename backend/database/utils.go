@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"tierlist/models"
+	"tierlist/database/models"
 	"time"
 )
 
@@ -49,7 +49,7 @@ func clearDatabase(db *Database) error {
 	if db.DB == nil {
 		return fmt.Errorf("Database connection unavailable")
 	}
-	err := db.DB.Exec("TRUNCATE TABLE users, tierlists, tiers, items, sessions RESTART IDENTITY CASCADE").Error
+	err := db.DB.Exec("TRUNCATE TABLE users, tierlists, tierlist_items, submissions, submission_rankings, sessions RESTART IDENTITY CASCADE").Error
 	if err != nil {
 		return fmt.Errorf("Failed to drop tables: %v", err)
 	}
@@ -62,11 +62,11 @@ func migrateDatabase(db *Database) error {
 	if db.DB == nil {
 		return fmt.Errorf("Database connection unavailable")
 	}
-	err := db.DB.Migrator().DropTable(&models.User{}, &models.Tierlist{}, &models.Tier{}, &models.Item{}, &models.Session{})
+	err := db.DB.Migrator().DropTable(&models.User{}, &models.Tierlist{}, &models.TierlistItem{}, &models.Submissions{}, &models.SubmissionRankings{}, &models.Session{})
 	if err != nil {
 		return fmt.Errorf("Failed to drop tables: %v", err)
 	}
-	err = db.DB.AutoMigrate(&models.User{}, &models.Tierlist{}, &models.Tier{}, &models.Item{}, &models.Session{})
+	err = db.DB.AutoMigrate(&models.User{}, &models.Tierlist{}, &models.TierlistItem{}, &models.Submissions{}, &models.SubmissionRankings{}, &models.Session{})
 	if err != nil {
 		return fmt.Errorf("Failed to migrate database: %v", err)
 	}
