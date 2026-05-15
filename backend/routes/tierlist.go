@@ -23,7 +23,6 @@ func SetupTierlistRoutes(api *gin.RouterGroup, db *database.Database) {
 	tierlist.DELETE("/:id", func(c *gin.Context) { deleteTierList(c, db) })
 
 	tierlist.POST("/:id/item", func(c *gin.Context) { addItem(c, db) })
-	tierlist.PUT("/:id/item/:itemId", func(c *gin.Context) { updateItem(c, db) })
 	tierlist.DELETE("/:id/item/:itemId", func(c *gin.Context) { deleteItem(c, db) })
 }
 
@@ -152,32 +151,6 @@ func addItem(c *gin.Context, db *database.Database) {
 	}
 
 	c.JSON(http.StatusCreated, item)
-}
-
-func updateItem(c *gin.Context, db *database.Database) {
-	var request dto.UpdateItemRequest
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error()})
-		return
-	}
-
-	itemID := c.Param("itemId")
-	var item models.TierlistItem
-	if err := db.DB.Where("id = ?", itemID).First(&item).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"Error": "Item not found"})
-		return
-	}
-
-	item.Name = request.Name
-	item.ImageURL = request.ImageURL
-	item.SortOrder = request.SortOrder
-
-	if err := db.DB.Save(&item).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"Error": "Database Error"})
-		return
-	}
-
-	c.JSON(http.StatusOK, item)
 }
 
 func deleteItem(c *gin.Context, db *database.Database) {

@@ -15,8 +15,3 @@ type CreateItemRequest struct {
 	SortOrder int    `json:"sort_order"`
 }
 
-type UpdateItemRequest struct {
-	Name      string `json:"name"`
-	ImageURL  string `json:"image_url"`
-	SortOrder int    `json:"sort_order"`
-}
