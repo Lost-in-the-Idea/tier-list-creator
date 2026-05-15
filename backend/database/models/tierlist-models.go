@@ -8,7 +8,7 @@ import (
 )
 
 type Tierlist struct {
-	ID uuid.UUID `json:"id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	ID uuid.UUID `json:"id" gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	Title string `json:"title"`
 	Description string `json:"description"`
 	CreatorID uuid.UUID `json:"creator_id" gorm:"type:uuid;index"`
@@ -21,7 +21,7 @@ type Tierlist struct {
 }
 
 type TierlistItem struct {
-	ID uuid.UUID `json:"id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	ID uuid.UUID `json:"id" gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	TierlistID uuid.UUID `json:"tierlist_id" gorm:"type:uuid;index"`
 	Name string `json:"name"`
 	ImageURL string `json:"image_url"`
@@ -29,7 +29,7 @@ type TierlistItem struct {
 }
 
 type Submissions struct { // this acts as the metadata table
-	ID uuid.UUID `json:"id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	ID uuid.UUID `json:"id" gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	TierlistID uuid.UUID `json:"tierlist_id" gorm:"type:uuid;uniqueIndex:uq_tierlist_user;"` // composite unique index with UserID to ensure one submission per user per tierlist
 	UserID uuid.UUID `json:"user_id" gorm:"type:uuid;uniqueIndex:uq_tierlist_user"` // composite unique index with TierlistID to ensure one submission per user per tierlist
 	CreatedAt time.Time `json:"created_at"`
@@ -37,7 +37,7 @@ type Submissions struct { // this acts as the metadata table
 }
 
 type SubmissionRankings struct {
-	ID uuid.UUID `json:"id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	ID uuid.UUID `json:"id" gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	SubmissionID uuid.UUID `json:"submission_id" gorm:"type:uuid;index"`
 	ItemID uuid.UUID `json:"item_id" gorm:"type:uuid;index"`
 	Tier string `json:"tier" gorm:"type:varchar(1)"` // e.g., "S", "A", "B", etc.

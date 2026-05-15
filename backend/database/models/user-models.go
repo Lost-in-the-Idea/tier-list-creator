@@ -7,7 +7,7 @@ import (
 )
 
 type User struct {
-	ID uuid.UUID `json:"id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	ID uuid.UUID `json:"id" gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	DiscordID string `json:"discord_id" gorm:"uniqueIndex"`
 	Username string `json:"username"`
 	Avatar string `json:"avatar"`
@@ -16,7 +16,7 @@ type User struct {
 }
 
 type Session struct {
-	ID uuid.UUID `json:"id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	ID uuid.UUID `json:"id" gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	Token string `json:"token" gorm:"uniqueIndex"`
 	UserID uuid.UUID `json:"user_id" gorm:"type:uuid;index"`
 	LastUsed time.Time `json:"last_used"`
