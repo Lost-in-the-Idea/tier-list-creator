@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 	"tierlist/database"
+	"tierlist/database/models"
 	"tierlist/middleware"
-	"tierlist/models"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -106,7 +106,7 @@ func handleDiscordCallback(c *gin.Context, db *database.Database) {
 	sessionToken := uuid.New().String()
 	session := models.Session{
 		Token: sessionToken,
-		DiscordID: user.DiscordID,
+		UserID: user.ID,
 		LastUsed: time.Now(),
 		ExpiresAt: time.Now().Add(time.Hour * 168),
 	}

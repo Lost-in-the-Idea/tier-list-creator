@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 	"tierlist/database"
-	"tierlist/models"
+	"tierlist/database/models"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -34,7 +34,7 @@ func AuthRequired(db *database.Database) gin.HandlerFunc {
 		}
 
 		var user models.User
-		if err := db.DB.Where("discord_id = ?", session.DiscordID).First(&user).Error; err != nil {
+		if err := db.DB.Where("id = ?", session.UserID).First(&user).Error; err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User Not Found"})
 			c.Abort()
 			return
@@ -42,7 +42,7 @@ func AuthRequired(db *database.Database) gin.HandlerFunc {
 
 		now := time.Now()
 		expiryDuration := time.Hour * 168
-		if err := db.DB.Model(&session).Update("expires_at", now.Add(time.Hour * 168)).Error; err != nil {
+		if err := db.DB.Model(&session).Update("expires_at", now.Add(expiryDuration)).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database Error"})
 			c.Abort()
 			return

@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"tierlist/database"
+	"tierlist/database/models"
 	"tierlist/middleware"
-	"tierlist/models"
 
 	"github.com/gin-gonic/gin"
 )
