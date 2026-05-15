@@ -1,124 +1,103 @@
 [
   {
-    "name": "Tierlist 1",
+    "title": "Tierlist 1",
     "description": "This is the first Tierlist",
-    "creator_id": 1,
-    "version": 1,
-    "tiers": [
-      { "text": "S", "colour": "f4ee1d" },
-      { "text": "A", "colour": "d81621" },
-      { "text": "B", "colour": "00bef1" },
-      { "text": "C", "colour": "37f100" },
-      { "text": "D", "colour": "ffffff" },
-      { "text": "F", "colour": "000000" }
-    ],
-    "items": [
+    "creator_id": "11111111-1111-4111-a111-111111111111",
+    "share_code": "SHARE001",
+    "expiry_time": "2027-01-01T00:00:00Z",
+    "tierlist_items": [
       {
-        "text": "Nacht der Untoten",
-        "image": "https://static.wikia.nocookie.net/callofduty/images/2/2b/Nacht_Der_Untoten_Menu_Selection_WaW.png/revision/latest?cb=20161009103531",
-        "tier_text": "S"
+        "name": "Nacht der Untoten",
+        "image_url": "https://static.wikia.nocookie.net/callofduty/images/2/2b/Nacht_Der_Untoten_Menu_Selection_WaW.png/revision/latest?cb=20161009103531",
+        "sort_order": 1
       },
       {
-        "text": "Verrückt",
-        "image": "https://static.wikia.nocookie.net/callofduty/images/a/a1/Verruckt_Menu_Selection_WaW.png/revision/latest?cb=20161009103542",
-        "tier_text": "A"
+        "name": "Verrückt",
+        "image_url": "https://static.wikia.nocookie.net/callofduty/images/a/a1/Verruckt_Menu_Selection_WaW.png/revision/latest?cb=20161009103542",
+        "sort_order": 2
       },
       {
-        "text": "Shi No Numa",
-        "image": "https://static.wikia.nocookie.net/callofduty/images/2/2f/Shi_No_Numa_Menu_Selection_WaW.png/revision/latest?cb=20161009103553",
-        "tier_text": "B"
+        "name": "Shi No Numa",
+        "image_url": "https://static.wikia.nocookie.net/callofduty/images/2/2f/Shi_No_Numa_Menu_Selection_WaW.png/revision/latest?cb=20161009103553",
+        "sort_order": 3
       },
       {
-        "text": "Der Riese",
-        "image": "https://static.wikia.nocookie.net/callofduty/images/8/86/Der_Riese_Menu_Selection_WaW.png/revision/latest?cb=20161009103603",
-        "tier_text": "C"
+        "name": "Der Riese",
+        "image_url": "https://static.wikia.nocookie.net/callofduty/images/8/86/Der_Riese_Menu_Selection_WaW.png/revision/latest?cb=20161009103603",
+        "sort_order": 4
       },
       {
-        "text": "Moon",
-        "image": "https://static.wikia.nocookie.net/callofduty/images/c/cc/Moon_Menu_Selection_BO.png/revision/latest?cb=20240710075602",
-        "tier_text": "U"
+        "name": "Moon",
+        "image_url": "https://static.wikia.nocookie.net/callofduty/images/c/cc/Moon_Menu_Selection_BO.png/revision/latest?cb=20240710075602",
+        "sort_order": 5
       }
     ]
   },
   {
-    "name": "Tierlist 2",
+    "title": "Tierlist 2",
     "description": "This is the second Tierlist",
-    "creator_id": 2,
-    "version": 1,
-    "tiers": [
-      { "text": "S", "colour": "f4ee1d" },
-      { "text": "A", "colour": "d81621" },
-      { "text": "B", "colour": "00bef1" },
-      { "text": "C", "colour": "37f100" },
-      { "text": "D", "colour": "ffffff" },
-      { "text": "F", "colour": "000000" }
-    ],
-    "items": [
+    "creator_id": "22222222-2222-4222-a222-222222222222",
+    "share_code": "SHARE002",
+    "expiry_time": "2027-01-01T00:00:00Z",
+    "tierlist_items": [
       {
-        "text": "Green Hill Zone",
-        "image": "https://example.com/green_hill_zone.png",
-        "tier_text": "S"
+        "name": "Green Hill Zone",
+        "image_url": "https://example.com/green_hill_zone.png",
+        "sort_order": 1
       },
       {
-        "text": "Chemical Plant Zone",
-        "image": "https://example.com/chemical_plant_zone.png",
-        "tier_text": "A"
+        "name": "Chemical Plant Zone",
+        "image_url": "https://example.com/chemical_plant_zone.png",
+        "sort_order": 2
       },
       {
-        "text": "Casino Night Zone",
-        "image": "https://example.com/casino_night_zone.png",
-        "tier_text": "B"
+        "name": "Casino Night Zone",
+        "image_url": "https://example.com/casino_night_zone.png",
+        "sort_order": 3
       },
       {
-        "text": "Ice Cap Zone",
-        "image": "https://example.com/ice_cap_zone.png",
-        "tier_text": "C"
+        "name": "Ice Cap Zone",
+        "image_url": "https://example.com/ice_cap_zone.png",
+        "sort_order": 4
       },
       {
-        "text": "Sky Sanctuary Zone",
-        "image": "https://example.com/sky_sanctuary_zone.png",
-        "tier_text": "U"
+        "name": "Sky Sanctuary Zone",
+        "image_url": "https://example.com/sky_sanctuary_zone.png",
+        "sort_order": 5
       }
     ]
   },
   {
-    "name": "Tierlist 3",
+    "title": "Tierlist 3",
     "description": "This is the third Tierlist",
-    "creator_id": 3,
-    "version": 1,
-    "tiers": [
-      { "text": "S", "colour": "f4ee1d" },
-      { "text": "A", "colour": "d81621" },
-      { "text": "B", "colour": "00bef1" },
-      { "text": "C", "colour": "37f100" },
-      { "text": "D", "colour": "ffffff" },
-      { "text": "F", "colour": "000000" }
-    ],
-    "items": [
+    "creator_id": "33333333-3333-4333-a333-333333333333",
+    "share_code": "SHARE003",
+    "expiry_time": "2027-01-01T00:00:00Z",
+    "tierlist_items": [
       {
-        "text": "Mario",
-        "image": "https://example.com/mario.png",
-        "tier_text": "S"
+        "name": "Mario",
+        "image_url": "https://example.com/mario.png",
+        "sort_order": 1
       },
       {
-        "text": "Luigi",
-        "image": "https://example.com/luigi.png",
-        "tier_text": "A"
+        "name": "Luigi",
+        "image_url": "https://example.com/luigi.png",
+        "sort_order": 2
       },
       {
-        "text": "Peach",
-        "image": "https://example.com/peach.png",
-        "tier_text": "B"
+        "name": "Peach",
+        "image_url": "https://example.com/peach.png",
+        "sort_order": 3
       },
       {
-        "text": "Bowser",
-        "image": "https://example.com/bowser.png",
-        "tier_text": "C"
+        "name": "Bowser",
+        "image_url": "https://example.com/bowser.png",
+        "sort_order": 4
       },
       {
-        "text": "Yoshi",
-        "image": "https://example.com/yoshi.png",
-        "tier_text": "U"
+        "name": "Yoshi",
+        "image_url": "https://example.com/yoshi.png",
+        "sort_order": 5
       }
     ]
   }

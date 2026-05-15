@@ -1,0 +1,17 @@
+package dto
+
+import "time"
+
+type CreateTierlistRequest struct {
+	Title       string              `json:"title" binding:"required"`
+	Description string              `json:"description"`
+	ExpiryTime  time.Time           `json:"expiry_time" binding:"required"`
+	Items []CreateItemRequest 		`json:"tierlist_items" binding:"required,min=2,max=15,dive,required"`
+}
+
+type CreateItemRequest struct {
+	Name      string `json:"name" binding:"required"`
+	ImageURL  string `json:"image_url"`
+	SortOrder int    `json:"sort_order"`
+}
+

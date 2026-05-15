@@ -3,14 +3,16 @@ package routes
 import (
 	"net/http"
 
-	"tierlist/database"
-	"tierlist/middleware"
-	"tierlist/models"
-
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+
+	"tierlist/database"
+	"tierlist/database/models"
+	"tierlist/dto"
+	"tierlist/middleware"
 )
-	
-func SetupTierlistRoutes (api *gin.RouterGroup, db *database.Database) {
+
+func SetupTierlistRoutes(api *gin.RouterGroup, db *database.Database) {
 	tierlist := api.Group("/tierlist")
 	tierlist.Use(middleware.AuthRequired(db))
 
@@ -20,44 +22,45 @@ func SetupTierlistRoutes (api *gin.RouterGroup, db *database.Database) {
 	tierlist.PUT("/:id", func(c *gin.Context) { updateTierlist(c, db) })
 	tierlist.DELETE("/:id", func(c *gin.Context) { deleteTierList(c, db) })
 
-	tierlist.POST("/:id/tier", func(c *gin.Context) { addTier(c, db) })
-	tierlist.PUT("/:id/tier/:tierId", func(c *gin.Context) { updateTier(c, db) })
-	tierlist.DELETE("/:id/tier/:tierId", func(c *gin.Context) { deleteTier(c, db) })
 	tierlist.POST("/:id/item", func(c *gin.Context) { addItem(c, db) })
-	tierlist.PUT("/:id/item/:itemId", func(c *gin.Context) { updateItem(c, db) })
 	tierlist.DELETE("/:id/item/:itemId", func(c *gin.Context) { deleteItem(c, db) })
 }
 
 func getAllTierlists(c *gin.Context, db *database.Database) {
 	var tierlists []models.Tierlist
-	if err := db.DB.Find(&tierlists).Error; err != nil {
+	if err := db.DB.Preload("TierlistItems").Find(&tierlists).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"Error": "Database Error"})
-		return			
+		return
 	}
 	c.JSON(http.StatusOK, tierlists)
 }
 
 func getTierlistById(c *gin.Context, db *database.Database) {
-	var tierlist models.Tierlist
 	id := c.Param("id")
-	if err := db.DB.First(&tierlist, id).Error; err != nil {
+	var tierlist models.Tierlist
+	if err := db.DB.Where("id = ?", id).Preload("TierlistItems").First(&tierlist).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"Error": "Tierlist not found"})
 		return
-	}	
+	}
 	c.JSON(http.StatusOK, tierlist)
 }
 
 func createTierlist(c *gin.Context, db *database.Database) {
-	var request models.TierlistRequest
+	var request dto.CreateTierlistRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error()})
 		return
 	}
 
+	user, _ := c.Get("user")
+	creator := user.(models.User)
+
 	tierlist := models.Tierlist{
-		Name: request.Name,
+		Title:       request.Title,
 		Description: request.Description,
-		CreatorID: request.Creator,
+		CreatorID:   creator.ID,
+		ShareCode:   uuid.New().String(),
+		ExpiryTime:  request.ExpiryTime,
 	}
 
 	if err := db.DB.Create(&tierlist).Error; err != nil {
@@ -65,24 +68,12 @@ func createTierlist(c *gin.Context, db *database.Database) {
 		return
 	}
 
-	for _, tier := range request.Tiers {
-		newTier := models.Tier{
-			TierlistID: tierlist.ID,
-			Text: tier.Name,
-			Colour: tier.Colour,
-		}
-		if err := db.DB.Create(&newTier).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"Error": "Database Error"})
-			return
-		}
-	}
-
 	for _, item := range request.Items {
-		newItem := models.Item{
+		newItem := models.TierlistItem{
 			TierlistID: tierlist.ID,
-			Text: item.Text,
-			Image: item.Image,
-			TierText: item.Tier,
+			Name:       item.Name,
+			ImageURL:   item.ImageURL,
+			SortOrder:  item.SortOrder,
 		}
 		if err := db.DB.Create(&newItem).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"Error": "Database Error"})
@@ -102,30 +93,26 @@ func updateTierlist(c *gin.Context, db *database.Database) {
 
 	id := c.Param("id")
 	var tierlist models.Tierlist
-	if err := db.DB.First(&tierlist, id).Error; err != nil {
+	if err := db.DB.Where("id = ?", id).First(&tierlist).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"Error": "Tierlist not found"})
 		return
 	}
 
-
-	tierlist.Name = request.Name
-    tierlist.Description = request.Description
-    tierlist.CreatorID = request.CreatorID
-    tierlist.Version = request.Version
-
+	tierlist.Title = request.Title
+	tierlist.Description = request.Description
 
 	if err := db.DB.Save(&tierlist).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"Error": "Database Error"})
 		return
 	}
 
-c.JSON(http.StatusOK, tierlist)
+	c.JSON(http.StatusOK, tierlist)
 }
 
 func deleteTierList(c *gin.Context, db *database.Database) {
 	id := c.Param("id")
 	var tierlist models.Tierlist
-	if err := db.DB.First(&tierlist, id).Error; err != nil {
+	if err := db.DB.Where("id = ?", id).First(&tierlist).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"Error": "Tierlist not found"})
 		return
 	}
@@ -135,93 +122,27 @@ func deleteTierList(c *gin.Context, db *database.Database) {
 		return
 	}
 
-	if err := db.DB.Where("tierlist_id = ?", id).Delete(&models.Tier{}).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"Error": "Database Error"})
-		return
-	}
-
-	if err := db.DB.Where("tierlist_id = ?", id).Delete(&models.Item{}).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"Error": "Database Error"})
-		return
-	}
-
 	c.JSON(http.StatusOK, gin.H{"Message": "Tierlist deleted"})
 }
 
-func addTier(c *gin.Context, db *database.Database) {
-	var request models.Tier
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error()})
-		return
-	}
-
-	tier := models.Tier{
-		TierlistID: request.TierlistID,
-		Text: request.Text,
-		Colour: request.Colour,
-	}
-
-	if err := db.DB.Create(&tier).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"Error": "Database Error"})
-		return
-	}
-
-	c.JSON(http.StatusCreated, tier)
-}
-
-func updateTier(c *gin.Context, db *database.Database) {
-	var request models.Tier
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error()})
-		return
-	}
-
-	tierID := c.Param("tierId")
-	var tier models.Tier
-	if err := db.DB.First(&tier, tierID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"Error": "Tier not found"})
-		return
-	}
-
-	tier.Text = request.Text
-	tier.Colour = request.Colour
-
-	if err := db.DB.Save(&tier).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"Error": "Database Error"})
-		return
-	}	
-
-	c.JSON(http.StatusOK, tier)
-}
-
-func deleteTier(c *gin.Context, db *database.Database) {
-	tierID := c.Param("tierId")
-	var tier models.Tier
-	if err := db.DB.First(&tier, tierID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"Error": "Tier not found"})
-		return
-	}
-
-	if err := db.DB.Delete(&tier).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"Error": "Database Error"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"Message": "Tier deleted"})
-}
-
 func addItem(c *gin.Context, db *database.Database) {
-	var request models.Item
+	var request dto.CreateItemRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error()})
 		return
 	}
 
-	item := models.Item{
-		TierlistID: request.TierlistID,
-		Text: request.Text,
-		Image: request.Image,
-		TierText: request.TierText,
+	tierlistID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": "Invalid tierlist ID"})
+		return
+	}
+
+	item := models.TierlistItem{
+		TierlistID: tierlistID,
+		Name:       request.Name,
+		ImageURL:   request.ImageURL,
+		SortOrder:  request.SortOrder,
 	}
 
 	if err := db.DB.Create(&item).Error; err != nil {
@@ -232,36 +153,10 @@ func addItem(c *gin.Context, db *database.Database) {
 	c.JSON(http.StatusCreated, item)
 }
 
-func updateItem(c *gin.Context, db *database.Database) {
-	var request models.Item
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error()})
-		return
-	}
-
-	itemID := c.Param("itemId")
-	var item models.Item
-	if err := db.DB.First(&item, itemID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"Error": "Item not found"})
-		return
-	}
-
-	item.Text = request.Text
-	item.Image = request.Image
-	item.TierText = request.TierText
-
-	if err := db.DB.Save(&item).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"Error": "Database Error"})
-		return
-	}
-
-	c.JSON(http.StatusOK, item)
-}
-
 func deleteItem(c *gin.Context, db *database.Database) {
 	itemID := c.Param("itemId")
-	var item models.Item
-	if err := db.DB.First(&item, itemID).Error; err != nil {
+	var item models.TierlistItem
+	if err := db.DB.Where("id = ?", itemID).First(&item).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"Error": "Item not found"})
 		return
 	}
