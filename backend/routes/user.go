@@ -21,6 +21,8 @@ func SetupUserRoutes(api *gin.RouterGroup, db *database.Database) {
 
 }
 
+// The following functions are placeholders and should be implemented with actual logic to interact with the database and handle user data.
+
 func getAllUsers(c *gin.Context, db *database.Database) {
 	var users []models.User
 	if err := db.DB.Find(&users).Error; err != nil{
