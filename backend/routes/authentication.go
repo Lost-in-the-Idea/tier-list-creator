@@ -7,6 +7,7 @@ import (
 	"os"
 	"tierlist/database"
 	"tierlist/database/models"
+	"tierlist/dto"
 	"tierlist/middleware"
 	"time"
 
@@ -143,15 +144,21 @@ func handleLogout(c *gin.Context, db *database.Database) {
 	}
 
 	c.SetCookie("session_token", "", -1, "/", "localhost", false, true)
-	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
+	c.JSON(http.StatusOK, dto.MessageResponse{Message: "Logged out successfully"})
 }
 
 func getCurrentUser(c *gin.Context) {
-    user, exists := c.Get("user")
-    if !exists {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
-        return
-    }
-    
-    c.JSON(http.StatusOK, gin.H{"user": user})
+	user, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	currentUser := user.(models.User)
+	c.JSON(http.StatusOK, dto.UserReponse{
+		ID:        currentUser.ID.String(),
+		DiscordID: currentUser.DiscordID,
+		Username:  currentUser.Username,
+		Avatar:    currentUser.Avatar,
+	})
 }
