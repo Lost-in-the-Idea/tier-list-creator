@@ -262,7 +262,7 @@ func getTierlistResults(c *gin.Context, db *database.Database) {
 				Avatar:    tierlist.Creator.Avatar,
 			},
 			Items:        items,
-			HasSubmitted: false, // results endpoint doesn't care if user has submitted or not, change to false to writing a new dto
+			HasSubmitted: false, // results endpoint doesn't need this field, but required by TierlistResponse struct, so just set to false for now
 		},
 		TotalSubmissions: len(tierlist.Submissions),
 		Results:          results,
