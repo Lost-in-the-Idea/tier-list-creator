@@ -87,6 +87,11 @@ func seedDatabase(db *Database) error {
 	if err != nil {
 		return fmt.Errorf("Failed to seed tierlists: %v", err)
 	}
+
+	err = seedSubmissions(db)
+	if err != nil {
+		return fmt.Errorf("Failed to seed submissions: %v", err)
+	}
 	return nil
 }
 
@@ -144,5 +149,33 @@ func seedTierlists(db *Database) error {
     }
 
 	fmt.Println("Tierlists Seeded Successfully")
+	return nil
+}
+
+func seedSubmissions(db *Database) error {
+	submissionsJson, err := os.ReadFile("database/seeds/submissions.json")
+	if err != nil {
+		return fmt.Errorf("Failed to read submissions seed file: %v", err)
+	}
+
+	var count int64
+	db.DB.Model(&models.Submissions{}).Count(&count)
+	if count > 0 {
+		fmt.Println("Submissions already seeded, skipping")
+		return nil
+	}
+
+	var submissions []models.Submissions
+	if err := json.Unmarshal(submissionsJson, &submissions); err != nil {
+		return fmt.Errorf("Failed to parse submissions seed: %w", err)
+	}
+
+	for _, s := range submissions {
+		if err := db.DB.Create(&s).Error; err != nil {
+			return fmt.Errorf("Failed to seed submission: %w", err)
+		}
+	}
+
+	fmt.Println("Submissions Seeded Successfully")
 	return nil
 }
