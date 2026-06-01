@@ -20,8 +20,8 @@ type SubmitRankingRequest struct {
 }
 
 type RankingRequest struct {
-	ItemID    uint `json:"item_id" binding:"required"`
-	Tier string `json:"tier" binding:"required,oneof=S A B C D F"` // tier must be one of the specified values and case sensitive
+	ItemID string `json:"item_id" binding:"required,uuid"`
+	Tier   string `json:"tier" binding:"required,oneof=S A B C D F"`
 }
 
 type TierlistItemResponse struct {
