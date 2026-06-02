@@ -60,6 +60,6 @@ type TierResult struct {
 	Counts map[string]int `json:"counts"` // key is tier name, value is count of submissions for that tier
 	Total int `json:"total"` // total number of submissions for this item
 	TopTier string `json:"top_tier"` // the tier with the highest count, if tie then the higher tier wins (S > A > B > C > D > F)
-	AverageScore float64 `json:"average_score"` // 1.0 - 5.0
+	AverageScore float64 `json:"average_score"` // 1.0 - 6.0
 	Rank int `json:"rank"` // rank of the item based on average score, starts at 1 
 }
