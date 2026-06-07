@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 )
 
-func GenerateStateCookie() (string, error) {
+func generateStateCookie() (string, error) {
 	bytes := make([]byte, 16)
 	_, err := rand.Read(bytes)
 	if err != nil {
