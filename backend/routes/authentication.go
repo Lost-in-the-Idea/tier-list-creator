@@ -120,7 +120,12 @@ func handleDiscordCallback(c *gin.Context, db *database.Database) {
 	// set secure flag to true in production
 	c.SetCookie("session_token", sessionToken, 60*60*24*7, "/", "localhost", false, true)
 
-	c.JSON(http.StatusOK, gin.H{"user": user, "session": session})
+	c.JSON(http.StatusOK, dto.UserResponse{
+		ID:        user.ID.String(),
+		DiscordID: user.DiscordID,
+		Username:  user.Username,
+		Avatar:    user.Avatar,
+	})
 
 }
 
@@ -155,9 +160,9 @@ func getCurrentUser(c *gin.Context) {
 	}
 
 	currentUser := user.(models.User)
-	c.JSON(http.StatusOK, dto.UserReponse{
+	c.JSON(http.StatusOK, dto.UserResponse{
 		ID:        currentUser.ID.String(),
-		DiscordID: currentUser.DiscordID,
+		DiscordID: currentUser.DiscordID,		
 		Username:  currentUser.Username,
 		Avatar:    currentUser.Avatar,
 	})
