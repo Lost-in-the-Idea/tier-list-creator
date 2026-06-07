@@ -25,7 +25,7 @@ func OptionalAuth(db *database.Database) gin.HandlerFunc {
 
 		if time.Now().After(session.ExpiresAt) {
 			db.DB.Delete(&session)
-			c.SetCookie("session_token", "", -1, "/", "localhost", false, true)
+			c.SetCookie("session_token", "", -1, "/", "localhost", true, true)
 			c.Next()
 			return
 		}
@@ -60,7 +60,7 @@ func AuthRequired(db *database.Database) gin.HandlerFunc {
 
 		if time.Now().After(session.ExpiresAt) {
 			db.DB.Delete(&session)
-			c.SetCookie("session_token", "", -1, "/", "localhost", false, true)
+			c.SetCookie("session_token", "", -1, "/", "localhost", true, true)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Session Expired"})
 			c.Abort()
 			return
@@ -86,8 +86,7 @@ func AuthRequired(db *database.Database) gin.HandlerFunc {
 			return
 		}
 
-		// set secure flag to true in production
-		c.SetCookie("session_token", sessionToken, int(expiryDuration.Seconds()), "/", "localhost", false, true)
+		c.SetCookie("session_token", sessionToken, int(expiryDuration.Seconds()), "/", "localhost", true, true)
 		c.Set("user", user)
 		c.Set("session", session)
 		c.Next()

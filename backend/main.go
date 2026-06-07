@@ -7,7 +7,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"tierlist/database"
-	"tierlist/utilities"
+	"tierlist/routes"
 )
 
 func main() {
@@ -30,6 +30,9 @@ func main() {
 	defer db.Close()
 
 	r := gin.Default()
-	utilities.SetupRoutes(r, &db)
-	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
-  }
+	api := r.Group("/api")
+	routes.SetupTierlistRoutes(api, &db)
+	routes.SetupUserRoutes(api, &db)
+	routes.SetupAuthenticationRoutes(api, &db)
+	r.Run()
+}

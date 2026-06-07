@@ -55,7 +55,7 @@ func getTierlistById(c *gin.Context, db *database.Database) {
 		Title:       tierlist.Title,
 		Description: tierlist.Description,
 		ExpiresAt:   tierlist.ExpiryTime,
-		Creator: dto.UserReponse{
+		Creator: dto.UserResponse{
 			ID:        tierlist.Creator.ID.String(),
 			DiscordID: tierlist.Creator.DiscordID,
 			Username:  tierlist.Creator.Username,
@@ -255,7 +255,7 @@ func getTierlistResults(c *gin.Context, db *database.Database) {
 			Title:       tierlist.Title,
 			Description: tierlist.Description,
 			ExpiresAt:   tierlist.ExpiryTime,
-			Creator: dto.UserReponse{
+			Creator: dto.UserResponse{
 				ID:        tierlist.Creator.ID.String(),
 				DiscordID: tierlist.Creator.DiscordID,
 				Username:  tierlist.Creator.Username,

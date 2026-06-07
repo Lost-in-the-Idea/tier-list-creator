@@ -37,7 +37,7 @@ type TierlistResponse struct {
 	Title string `json:"title"`
 	Description string `json:"description"`
 	ExpiresAt time.Time `json:"expires_at"`
-	Creator UserReponse `json:"creator"`
+	Creator UserResponse `json:"creator"`
 	Items []TierlistItemResponse `json:"items"`
 	HasSubmitted bool `json:"has_submitted"`
 }
