@@ -18,10 +18,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var (
-	state = "random"
-	conf = &oauth2.Config{}
-)
+var conf = &oauth2.Config{}
 
 func init() {
 		_ = godotenv.Load()
@@ -47,7 +44,14 @@ func SetupAuthenticationRoutes(api *gin.RouterGroup, db *database.Database) {
 }
 
 func handleDiscordRedirect(c *gin.Context) {
+	state, err := GenerateStateCookie()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate state"})
+		return
+	}
+
 	fmt.Printf("Redirecting to Discord with URL: %s\n", conf.RedirectURL)
+	c.SetCookie("login_state", state, 300, "/", "localhost", true, true)
 	url := conf.AuthCodeURL(state)
 	c.Redirect(http.StatusTemporaryRedirect, url)
 }
@@ -58,7 +62,22 @@ func handleDiscordCallback(c *gin.Context, db *database.Database) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No code provided"})
 		return
 	}
+	
+	// verify state from cookie and query parameter
+	loginState, err := c.Cookie("login_state")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No login state provided"})
+		return
+	}
 
+	if loginState != c.Query("state") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid login state"})
+		return
+	}
+
+	c.SetCookie("login_state", "", -1, "/", "localhost", true, true)
+
+	// exchange code for access token
 	tok, err := conf.Exchange(c, code)
 
 	if err != nil {
@@ -66,6 +85,7 @@ func handleDiscordCallback(c *gin.Context, db *database.Database) {
 		return
 	}
 
+	// use access token to get user info from Discord API
 	client := conf.Client(c, tok)
 	resp, err := client.Get("https://discord.com/api/users/@me")
 	if err != nil {
@@ -74,12 +94,14 @@ func handleDiscordCallback(c *gin.Context, db *database.Database) {
 	}
 	defer resp.Body.Close()
 
+	// parse user info from response
 	var userInfo map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse user info"})
 		return
 	}
 
+	// check if user exists in database, if not create new user
 	var user models.User
 	discordID := userInfo["id"].(string)
 	result := db.DB.Where("discord_id = ?", discordID).First(&user)
@@ -104,6 +126,7 @@ func handleDiscordCallback(c *gin.Context, db *database.Database) {
 		}
 	}
 
+	// create session for user and set cookie
 	sessionToken := uuid.New().String()
 	session := models.Session{
 		Token: sessionToken,
@@ -118,8 +141,9 @@ func handleDiscordCallback(c *gin.Context, db *database.Database) {
 	}
 
 	// set secure flag to true in production
-	c.SetCookie("session_token", sessionToken, 60*60*24*7, "/", "localhost", false, true)
+	c.SetCookie("session_token", sessionToken, 60*60*24*7, "/", "localhost", true, true)
 
+	// return user info as response
 	c.JSON(http.StatusOK, dto.UserResponse{
 		ID:        user.ID.String(),
 		DiscordID: user.DiscordID,
@@ -148,7 +172,7 @@ func handleLogout(c *gin.Context, db *database.Database) {
 		return
 	}
 
-	c.SetCookie("session_token", "", -1, "/", "localhost", false, true)
+	c.SetCookie("session_token", "", -1, "/", "localhost", true, true)
 	c.JSON(http.StatusOK, dto.MessageResponse{Message: "Logged out successfully"})
 }
 
