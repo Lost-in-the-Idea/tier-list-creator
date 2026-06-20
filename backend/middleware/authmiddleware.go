@@ -92,3 +92,22 @@ func AuthRequired(db *database.Database) gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func ValidateAuthState(c *gin.Context) {
+	loginState, err := c.Cookie("login_state")
+	if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "No login state provided"})
+			c.Abort()
+			return
+		}
+
+	if loginState != c.Query("state") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid login state"})
+		c.Abort()
+		return
+	}
+	
+	// clear cookie after validating to prevent reuse
+	c.SetCookie("login_state", "", -1, "/", "localhost", true, true)
+	c.Next()
+}

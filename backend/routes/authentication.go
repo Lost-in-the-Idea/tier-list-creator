@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -9,10 +8,8 @@ import (
 	"tierlist/database/models"
 	"tierlist/dto"
 	"tierlist/middleware"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/ravener/discord-oauth2"
 	"golang.org/x/oauth2"
@@ -35,7 +32,7 @@ func init() {
 func SetupAuthenticationRoutes(api *gin.RouterGroup, db *database.Database) {
 	authentication := api.Group("/auth")
 	authentication.GET("/discord/redirect", func(c *gin.Context) { handleDiscordRedirect(c) })
-	authentication.GET("/discord/callback", func(c *gin.Context) { handleDiscordCallback(c, db) })
+	authentication.GET("/discord/callback", middleware.ValidateAuthState, func(c *gin.Context) { handleDiscordCallback(c, db) })
 
 	protected := authentication.Group("/")
 	protected.Use(middleware.AuthRequired(db))
@@ -44,7 +41,7 @@ func SetupAuthenticationRoutes(api *gin.RouterGroup, db *database.Database) {
 }
 
 func handleDiscordRedirect(c *gin.Context) {
-	state, err := GenerateStateCookie()
+	state, err := generateStateCookie()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate state"})
 		return
@@ -62,88 +59,33 @@ func handleDiscordCallback(c *gin.Context, db *database.Database) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No code provided"})
 		return
 	}
-	
-	// verify state from cookie and query parameter
-	loginState, err := c.Cookie("login_state")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "No login state provided"})
-		return
-	}
 
-	if loginState != c.Query("state") {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid login state"})
-		return
-	}
-
-	c.SetCookie("login_state", "", -1, "/", "localhost", true, true)
-
-	// exchange code for access token
-	tok, err := conf.Exchange(c, code)
-
+	token, err := exchangeCodeForToken(c, code)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// use access token to get user info from Discord API
-	client := conf.Client(c, tok)
-	resp, err := client.Get("https://discord.com/api/users/@me")
+	userInfo, err := getUserInfoFromDiscord(c, token)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	defer resp.Body.Close()
 
-	// parse user info from response
-	var userInfo map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse user info"})
+	user, err := findOrCreateUser(db, userInfo)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// check if user exists in database, if not create new user
-	var user models.User
-	discordID := userInfo["id"].(string)
-	result := db.DB.Where("discord_id = ?", discordID).First(&user)
-	if result.Error != nil {
-		user = models.User{
-			DiscordID: discordID,
-			Username: userInfo["username"].(string),
-			Avatar: userInfo["avatar"].(string),
-			LastLogin: time.Now(),
-		}
-		if err := db.DB.Create(&user).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
-			return
-		}
-	} else {
-		user.Username = userInfo["username"].(string)
-		user.Avatar = userInfo["avatar"].(string)
-		user.LastLogin = time.Now()
-		if err := db.DB.Save(&user).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
-			return
-		}
-	}
-
-	// create session for user and set cookie
-	sessionToken := uuid.New().String()
-	session := models.Session{
-		Token: sessionToken,
-		UserID: user.ID,
-		LastUsed: time.Now(),
-		ExpiresAt: time.Now().Add(time.Hour * 168),
-	}
-
-	if err := db.DB.Create(&session).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create session"})
+	session, err := createSession(db, user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// set secure flag to true in production
-	c.SetCookie("session_token", sessionToken, 60*60*24*7, "/", "localhost", true, true)
+	c.SetCookie("session_token", session.Token, 60*60*24*7, "/", "localhost", true, true)
 
-	// return user info as response
 	c.JSON(http.StatusOK, dto.UserResponse{
 		ID:        user.ID.String(),
 		DiscordID: user.DiscordID,
@@ -154,20 +96,14 @@ func handleDiscordCallback(c *gin.Context, db *database.Database) {
 }
 
 func handleLogout(c *gin.Context, db *database.Database) {
-	sessionToken, err := c.Cookie("session_token")
+	sessionToken, exists := c.Get("session")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve session"})
+		return
+	}
+
+	err := deleteSession(db, sessionToken.(models.Session))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "No session token provided"})
-		return
-	}
-
-	var session models.Session
-	result := db.DB.Where("token = ?", sessionToken).First(&session)
-	if result.Error != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Session not found"})
-		return
-	}
-
-	if err := db.DB.Delete(&session).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete session"})
 		return
 	}
