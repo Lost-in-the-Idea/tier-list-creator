@@ -75,12 +75,10 @@ func AuthRequired(db *database.Database) gin.HandlerFunc {
 
 		now := time.Now()
 		expiryDuration := time.Hour * 168
-		if err := db.DB.Model(&session).Update("expires_at", now.Add(expiryDuration)).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database Error"})
-			c.Abort()
-			return
-		}
-		if err := db.DB.Model(&session).Update("last_used", now).Error; err != nil {
+		if err := db.DB.Model(&session).Updates(map[string]interface{}{
+			"expires_at": now.Add(expiryDuration),
+			"last_used":  now,
+		}).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database Error"})
 			c.Abort()
 			return
