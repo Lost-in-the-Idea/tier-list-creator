@@ -3,9 +3,9 @@ package routes
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"fmt"
-
 	"encoding/json"
+	"fmt"
+	"net/http"
 	"tierlist/database"
 	"tierlist/database/models"
 	"time"
@@ -42,6 +42,10 @@ func getUserInfoFromDiscord(c *gin.Context, token *oauth2.Token) (map[string]int
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("discord API returned status %d", resp.StatusCode)
+	}
+
 	var userInfo map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
 		return nil, err
@@ -54,18 +58,20 @@ func findOrCreateUser(db *database.Database, userInfo map[string]interface{}) (*
 	discordID := userInfo["id"].(string)
 	result := db.DB.Where("discord_id = ?", discordID).First(&user)
 	if result.Error != nil {
+		avatar, _ := userInfo["avatar"].(string)
 		user = models.User{
 			DiscordID: discordID,
-			Username: userInfo["username"].(string),
-			Avatar: userInfo["avatar"].(string),
+			Username:  userInfo["username"].(string),
+			Avatar:    avatar,
 			LastLogin: time.Now(),
 		}
 		if err := db.DB.Create(&user).Error; err != nil {
 			return nil, err
 		}
 	} else {
+		avatar, _ := userInfo["avatar"].(string)
 		user.Username = userInfo["username"].(string)
-		user.Avatar = userInfo["avatar"].(string)
+		user.Avatar = avatar
 		user.LastLogin = time.Now()
 		if err := db.DB.Save(&user).Error; err != nil {
 			return nil, err
@@ -94,5 +100,9 @@ func deleteSession(db *database.Database, session models.Session) error {
 
 func DeleteExpiredSessions(db *database.Database) {
 	result := db.DB.Where("expires_at < ?", time.Now()).Delete(&models.Session{})
+	if result.Error != nil {
+		fmt.Printf("Error deleting expired sessions: %v\n", result.Error)
+		return
+	}
 	fmt.Printf("Deleted %d expired sessions\n", result.RowsAffected)
 }
