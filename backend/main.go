@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -28,6 +29,15 @@ func main() {
 		panic(err)
 	}
 	defer db.Close()
+
+	// Goroutine to delete expired sessions every hour, ticker sends a signal to the channel every hour, which triggers the deletion of expired sessions
+	go func() {
+		ticker := time.NewTicker(time.Hour)
+		defer ticker.Stop()
+		for range ticker.C {
+			routes.DeleteExpiredSessions(&db)
+		}
+	}()
 
 	r := gin.Default()
 	api := r.Group("/api")
