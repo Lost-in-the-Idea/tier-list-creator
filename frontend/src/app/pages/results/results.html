@@ -24,6 +24,64 @@
       </div>
       <a [routerLink]="['/t', id]" class="btn btn-primary w-fit">Vote now</a>
     } @else {
+      <div role="tablist" class="tabs tabs-boxed w-fit">
+        <a
+          role="tab"
+          class="tab"
+          [class.tab-active]="view() === 'board'"
+          (click)="setView('board')"
+        >
+          Community results
+        </a>
+        <a
+          role="tab"
+          class="tab"
+          [class.tab-active]="view() === 'details'"
+          (click)="setView('details')"
+        >
+          Details
+        </a>
+      </div>
+
+      @if (view() === 'board') {
+      <div class="board">
+        @for (tier of board().buckets; track tier.label) {
+          <div class="tier-row">
+            <div class="tier-label" [style.background-color]="tier.color">
+              {{ tier.label }}
+            </div>
+            <div class="tier-items">
+              @for (item of tier.items; track item.item_id) {
+                <div class="item">
+                  @if (item.image_url) {
+                    <img class="item-img" [src]="item.image_url" [alt]="item.item_name" />
+                  }
+                  <span class="item-name">{{ item.item_name }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (board().unranked.length) {
+        <section>
+          <h2 class="text-sm font-semibold uppercase tracking-wide text-base-content/60 mb-2">
+            No votes yet
+          </h2>
+          <div class="tier-items pool-items">
+            @for (item of board().unranked; track item.item_id) {
+              <div class="item">
+                @if (item.image_url) {
+                  <img class="item-img" [src]="item.image_url" [alt]="item.item_name" />
+                }
+                <span class="item-name">{{ item.item_name }}</span>
+              </div>
+            }
+          </div>
+        </section>
+      }
+      } @else {
       <div class="overflow-x-auto">
         <table class="table">
           <thead>
@@ -69,6 +127,7 @@
           </tbody>
         </table>
       </div>
+      }
     }
   </div>
 }
