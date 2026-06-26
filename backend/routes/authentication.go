@@ -143,14 +143,12 @@ func handleDiscordCallback(c *gin.Context, db *database.Database) {
 	// set secure flag to true in production
 	c.SetCookie("session_token", sessionToken, 60*60*24*7, "/", "localhost", true, true)
 
-	// return user info as response
-	c.JSON(http.StatusOK, dto.UserResponse{
-		ID:        user.ID.String(),
-		DiscordID: user.DiscordID,
-		Username:  user.Username,
-		Avatar:    user.Avatar,
-	})
-
+	// redirect back to the frontend now that the session cookie is set
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:4200"
+	}
+	c.Redirect(http.StatusTemporaryRedirect, frontendURL)
 }
 
 func handleLogout(c *gin.Context, db *database.Database) {

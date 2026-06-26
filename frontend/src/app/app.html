@@ -1,4 +1,29 @@
-<div>
-  <h1 class="text-9xl">TAILWIND CSS TEST</h1>
-  <button class="btn btn-primary">DAISYUI TEST</button>
+<div class="min-h-screen bg-base-200 text-base-content">
+  <header class="navbar bg-base-100 shadow-sm px-4">
+    <div class="flex-1">
+      <a routerLink="/" class="btn btn-ghost text-xl font-bold">Tier List Creator</a>
+    </div>
+    <div class="flex-none gap-2">
+      @if (user(); as u) {
+        <a routerLink="/create" class="btn btn-primary btn-sm">Create</a>
+        <div class="flex items-center gap-2">
+          @if (u.avatar) {
+            <img
+              class="w-8 h-8 rounded-full"
+              [src]="avatarUrl(u.discord_id, u.avatar)"
+              [alt]="u.username"
+            />
+          }
+          <span class="text-sm font-medium hidden sm:inline">{{ u.username }}</span>
+          <button class="btn btn-ghost btn-sm" (click)="logout()">Logout</button>
+        </div>
+      } @else {
+        <button class="btn btn-primary btn-sm" (click)="login()">Login with Discord</button>
+      }
+    </div>
+  </header>
+
+  <main class="p-4 max-w-5xl mx-auto">
+    <router-outlet></router-outlet>
+  </main>
 </div>

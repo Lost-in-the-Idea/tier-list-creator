@@ -12,6 +12,9 @@
 1. Create a new discord application at the [Discord Developer Portal](https://discord.com/developers/applications).
 2. Under "OAuth2" > Add a redirect URI: `http://localhost:8080/api/auth/discord/callback`
 3. Copy the Client ID and Client Secret, these are needed for the environment variables.
+4. Dev: Redirect Links
+http://localhost:8080/api/auth/discord/redirect
+http://localhost:8080/api/auth/discord/callback
 
 ### 2. Create a `.env` file at the repo root
 

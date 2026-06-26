@@ -1,0 +1,33 @@
+<div class="flex flex-col gap-8 items-center text-center py-10">
+  <div class="max-w-2xl">
+    <h1 class="text-4xl font-bold mb-3">Create &amp; vote on tier lists</h1>
+    <p class="text-base-content/70">
+      Build a list of items, share the link, and let everyone rank them from S to F.
+      Then see the aggregated results.
+    </p>
+  </div>
+
+  @if (user()) {
+    <div class="flex flex-col sm:flex-row gap-3">
+      <a routerLink="/create" class="btn btn-primary btn-lg">Create a tier list</a>
+    </div>
+
+    <div class="card bg-base-100 shadow-sm w-full max-w-md">
+      <div class="card-body">
+        <h2 class="card-title text-base">Open an existing tier list</h2>
+        <div class="join w-full">
+          <input
+            class="input input-bordered join-item w-full"
+            type="text"
+            placeholder="Paste a tier list ID or link…"
+            (input)="onOpenInput($any($event.target).value)"
+            (keydown.enter)="open()"
+          />
+          <button class="btn btn-primary join-item" (click)="open()">Open</button>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <button class="btn btn-primary btn-lg" (click)="login()">Login with Discord to start</button>
+  }
+</div>

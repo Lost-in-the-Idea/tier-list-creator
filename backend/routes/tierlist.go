@@ -103,6 +103,7 @@ func createNewTierlist(c *gin.Context, db *database.Database) {
 	}
 
 	c.JSON(http.StatusCreated, dto.CreateTierlistResponse{
+		ID:        tierlist.ID.String(),
 		ShareCode: tierlist.ShareCode,
 		ExpiresAt: tierlist.ExpiryTime,
 	})

@@ -1,0 +1,74 @@
+@if (loading()) {
+  <div class="flex justify-center py-20">
+    <span class="loading loading-spinner loading-lg"></span>
+  </div>
+} @else if (error()) {
+  <div class="alert alert-error">
+    <span>{{ error() }}</span>
+  </div>
+} @else if (data(); as d) {
+  <div class="flex flex-col gap-4">
+    <div>
+      <h1 class="text-2xl font-bold">{{ d.tierlist.title }}</h1>
+      @if (d.tierlist.description) {
+        <p class="text-base-content/70">{{ d.tierlist.description }}</p>
+      }
+      <p class="text-sm text-base-content/50 mt-1">
+        {{ d.total_submissions }} submission(s)
+      </p>
+    </div>
+
+    @if (d.total_submissions === 0) {
+      <div class="alert">
+        <span>No submissions yet. Be the first to rank these items!</span>
+      </div>
+      <a [routerLink]="['/t', id]" class="btn btn-primary w-fit">Vote now</a>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Item</th>
+              <th>Top tier</th>
+              <th>Avg score</th>
+              @for (t of tierDefs; track t.label) {
+                <th class="text-center">{{ t.label }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of d.results; track r.item_id) {
+              <tr>
+                <td class="font-bold">{{ r.rank }}</td>
+                <td>
+                  <div class="flex items-center gap-2">
+                    @if (r.image_url) {
+                      <img class="w-8 h-8 rounded object-cover" [src]="r.image_url" [alt]="r.item_name" />
+                    }
+                    <span>{{ r.item_name }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span
+                    class="badge font-bold border-0"
+                    [style.background-color]="tierColor(r.top_tier)"
+                    [style.color]="'#1a1a1a'"
+                  >
+                    {{ r.top_tier || '—' }}
+                  </span>
+                </td>
+                <td>{{ r.average_score | number: '1.2-2' }}</td>
+                @for (t of tierDefs; track t.label) {
+                  <td class="text-center text-base-content/70">
+                    {{ r.counts[t.label] || 0 }}
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+}

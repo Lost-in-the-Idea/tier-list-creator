@@ -43,6 +43,7 @@ type TierlistResponse struct {
 }
 
 type CreateTierlistResponse struct {
+	ID string `json:"id"`
 	ShareCode string `json:"share_code"`
 	ExpiresAt time.Time `json:"expires_at"`
 }
