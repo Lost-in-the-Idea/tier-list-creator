@@ -3,49 +3,44 @@ package routes
 import (
 	"net/http"
 
-	"tierlist/database"
-	"tierlist/database/models"
-	"tierlist/middleware"
-
 	"github.com/gin-gonic/gin"
+
+	"tierlist/services"
 )
 
-func SetupUserRoutes(api *gin.RouterGroup, db *database.Database) {
+func SetupUserRoutes(api *gin.RouterGroup, svc *services.UserService, authRequired gin.HandlerFunc) {
 	users := api.Group("/users")
-	users.Use(middleware.AuthRequired(db))
+	users.Use(authRequired)
 
-	users.GET("/", func(c *gin.Context) { getAllUsers(c, db) })
-	users.GET("/:id", func(c *gin.Context) { getUserById(c, db) })
-	users.POST("/", func(c *gin.Context) { createUser(c, db) })
-	users.DELETE("/:id", func(c *gin.Context) { deleteUser(c, db) })
-
+	users.GET("/", func(c *gin.Context) { getAllUsers(c, svc) })
+	users.GET("/:id", getUserById)
+	users.POST("/", createUser)
+	users.DELETE("/:id", deleteUser)
 }
 
-// The following functions are placeholders and should be implemented with actual logic to interact with the database and handle user data.
-
-func getAllUsers(c *gin.Context, db *database.Database) {
-	var users []models.User
-	if err := db.DB.Find(&users).Error; err != nil{
-		c.JSON(http.StatusInternalServerError, gin.H {"Error": "Database Error"})
+func getAllUsers(c *gin.Context, svc *services.UserService) {
+	users, err := svc.GetAll()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database Error"})
 		return
 	}
 	c.JSON(http.StatusOK, users)
 }
 
-func getUserById(c *gin.Context, db *database.Database) { // not implemented yet
+func getUserById(c *gin.Context) {
 	id := c.Param("id")
 	c.JSON(http.StatusOK, gin.H{
 		"message": "User with UserID " + id,
 	})
 }
 
-func createUser(c *gin.Context, db *database.Database){ // not implemented yet
+func createUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "User Created",
 	})
 }
 
-func deleteUser(c *gin.Context, db *database.Database) { // not implemented yet
+func deleteUser(c *gin.Context) {
 	id := c.Param("id")
 	c.JSON(http.StatusOK, gin.H{
 		"message": "User Deleted " + id,
