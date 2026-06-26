@@ -21,3 +21,25 @@ func (s *UserService) GetAll() ([]models.User, error) {
 	}
 	return users, nil
 }
+
+func (s *UserService) GetByID(id string) (*models.User, error) {
+	var user models.User
+	if err := s.db.Where("id = ?", id).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (s *UserService) Create(user *models.User) error {
+	if err := s.db.Create(user).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *UserService) Delete(id string) error {
+	if err := s.db.Delete(&models.User{}, "id = ?", id).Error; err != nil {
+		return err
+	}
+	return nil
+}
