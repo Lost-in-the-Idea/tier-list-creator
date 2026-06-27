@@ -11,28 +11,28 @@ import (
 	"tierlist/services"
 )
 
-func SetupAuthenticationRoutes(api *gin.RouterGroup, svc *services.AuthService) {
+func SetupAuthenticationRoutes(api *gin.RouterGroup, svc *services.AuthService, cookieDomain string) {
 	authentication := api.Group("/auth")
-	authentication.GET("/discord/redirect", func(c *gin.Context) { handleDiscordRedirect(c, svc) })
-	authentication.GET("/discord/callback", middleware.ValidateAuthState, func(c *gin.Context) { handleDiscordCallback(c, svc) })
+	authentication.GET("/discord/redirect", func(c *gin.Context) { handleDiscordRedirect(c, svc, cookieDomain) })
+	authentication.GET("/discord/callback", middleware.ValidateAuthState(cookieDomain), func(c *gin.Context) { handleDiscordCallback(c, svc, cookieDomain) })
 
 	protected := authentication.Group("/")
-	protected.Use(middleware.AuthRequired(svc))
-	protected.GET("/logout", func(c *gin.Context) { handleLogout(c, svc) })
-	protected.GET("/me", getCurrentUser)
+	protected.Use(middleware.AuthRequired(svc, cookieDomain))
+	protected.GET("/logout", func(c *gin.Context) { handleLogout(c, svc, cookieDomain) })
+	protected.GET("/me", func(c *gin.Context) { getCurrentUser(c) })
 }
 
-func handleDiscordRedirect(c *gin.Context, svc *services.AuthService) {
+func handleDiscordRedirect(c *gin.Context, svc *services.AuthService, cookieDomain string) {
 	state, err := svc.GenerateStateToken()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate state"})
 		return
 	}
-	c.SetCookie("login_state", state, 300, "/", "localhost", true, true)
+	c.SetCookie("login_state", state, 300, "/", cookieDomain, true, true)
 	c.Redirect(http.StatusTemporaryRedirect, svc.BuildAuthURL(state))
 }
 
-func handleDiscordCallback(c *gin.Context, svc *services.AuthService) {
+func handleDiscordCallback(c *gin.Context, svc *services.AuthService, cookieDomain string) {
 	code := c.Query("code")
 	if code == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No code provided"})
@@ -58,7 +58,7 @@ func handleDiscordCallback(c *gin.Context, svc *services.AuthService) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.SetCookie("session_token", session.Token, 60*60*24*7, "/", "localhost", true, true)
+	c.SetCookie("session_token", session.Token, 60*60*24*7, "/", cookieDomain, true, true)
 	c.JSON(http.StatusOK, dto.UserResponse{
 		ID:        user.ID.String(),
 		DiscordID: user.DiscordID,
@@ -67,7 +67,7 @@ func handleDiscordCallback(c *gin.Context, svc *services.AuthService) {
 	})
 }
 
-func handleLogout(c *gin.Context, svc *services.AuthService) {
+func handleLogout(c *gin.Context, svc *services.AuthService, cookieDomain string) {
 	sessionVal, exists := c.Get("session")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve session"})
@@ -77,7 +77,7 @@ func handleLogout(c *gin.Context, svc *services.AuthService) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete session"})
 		return
 	}
-	c.SetCookie("session_token", "", -1, "/", "localhost", true, true)
+	c.SetCookie("session_token", "", -1, "/", cookieDomain, true, true)
 	c.JSON(http.StatusOK, dto.MessageResponse{Message: "Logged out successfully"})
 }
 

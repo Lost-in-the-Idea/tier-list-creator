@@ -128,8 +128,8 @@ func (s *AuthService) DeleteExpiredSessions() {
 	fmt.Printf("Deleted %d expired sessions\n", result.RowsAffected)
 }
 
-func (s *AuthService) ResolveSession(c *gin.Context) (*models.Session, *models.User, error) {
-		sessionToken, err := c.Cookie("session_token")
+func (s *AuthService) ResolveSession(c *gin.Context, cookieDomain string) (*models.Session, *models.User, error) {
+	sessionToken, err := c.Cookie("session_token")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -141,7 +141,7 @@ func (s *AuthService) ResolveSession(c *gin.Context) (*models.Session, *models.U
 
 	if time.Now().After(session.ExpiresAt) {
 		s.db.Delete(&session)
-		c.SetCookie("session_token", "", -1, "/", "localhost", true, true)
+		c.SetCookie("session_token", "", -1, "/", cookieDomain, true, true)
 		return nil, nil, errors.New("session expired")
 	}
 

@@ -23,6 +23,7 @@ func main() {
 	var DBPassword = os.Getenv("DB_PASSWORD")
 	var DBHost = os.Getenv("DB_HOST")
 	var DBPort = os.Getenv("DB_PORT")
+	var cookieDomain = os.Getenv("COOKIE_DOMAIN")
 
 	err := db.InitialiseDatabase(DBName, DBUser, DBPassword, DBHost, DBPort)
 	if err != nil {
@@ -53,13 +54,13 @@ func main() {
 		}
 	}()
 
-	authRequired := middleware.AuthRequired(authSvc)
-	optionalAuth := middleware.OptionalAuth(authSvc)
+	authRequired := middleware.AuthRequired(authSvc, cookieDomain)
+	optionalAuth := middleware.OptionalAuth(authSvc, cookieDomain)
 
 	r := gin.Default()
 	api := r.Group("/api")
 	routes.SetupTierlistRoutes(api, tierlistSvc, authRequired, optionalAuth)
 	routes.SetupUserRoutes(api, userSvc, authRequired)
-	routes.SetupAuthenticationRoutes(api, authSvc)
+	routes.SetupAuthenticationRoutes(api, authSvc, cookieDomain)
 	r.Run()
 }
