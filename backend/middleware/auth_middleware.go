@@ -10,7 +10,12 @@ import (
 
 func OptionalAuth(svc *services.AuthService, cookieDomain string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		session, user, err := svc.ResolveSession(c, cookieDomain)
+		token, err := c.Cookie("session_token")
+		if err != nil {
+			c.Next()
+			return
+		}
+		session, user, err := svc.ResolveSession(token)
 		if err != nil {
 			c.Next()
 			return
@@ -23,9 +28,16 @@ func OptionalAuth(svc *services.AuthService, cookieDomain string) gin.HandlerFun
 
 func AuthRequired(svc *services.AuthService, cookieDomain string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		session, user, err := svc.ResolveSession(c, cookieDomain)
+		token, err := c.Cookie("session_token")
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.Abort()
+			return
+		}
+		session, user, err := svc.ResolveSession(token)
 		if err != nil {
 			if err.Error() == "session expired" {
+				c.SetCookie("session_token", "", -1, "/", cookieDomain, true, true)
 				c.JSON(http.StatusUnauthorized, gin.H{"error": "Session Expired"})
 			} else {
 				c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})

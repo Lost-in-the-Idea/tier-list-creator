@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"
@@ -128,20 +127,14 @@ func (s *AuthService) DeleteExpiredSessions() {
 	fmt.Printf("Deleted %d expired sessions\n", result.RowsAffected)
 }
 
-func (s *AuthService) ResolveSession(c *gin.Context, cookieDomain string) (*models.Session, *models.User, error) {
-	sessionToken, err := c.Cookie("session_token")
-	if err != nil {
-		return nil, nil, err
-	}
-
+func (s *AuthService) ResolveSession(token string) (*models.Session, *models.User, error) {
 	var session models.Session
-	if err := s.db.Where("token = ?", sessionToken).First(&session).Error; err != nil {
+	if err := s.db.Where("token = ?", token).First(&session).Error; err != nil {
 		return nil, nil, err
 	}
 
 	if time.Now().After(session.ExpiresAt) {
 		s.db.Delete(&session)
-		c.SetCookie("session_token", "", -1, "/", cookieDomain, true, true)
 		return nil, nil, errors.New("session expired")
 	}
 
