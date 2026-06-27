@@ -7,9 +7,11 @@ import (
 	"strings"
 	"tierlist/database/models"
 	"time"
+
+	"gorm.io/gorm"
 )
 
-func HandleDatabaseActions(db *Database) error {
+func HandleDatabaseActions(db *gorm.DB) error {
 	actions := os.Getenv("DB_ACTION")
 	env := os.Getenv("APP_ENV")
 	if env != "dev" && (strings.Contains(actions, "clear") || strings.Contains(actions, "seed")) {
@@ -45,11 +47,11 @@ func HandleDatabaseActions(db *Database) error {
 	return nil
 }
 
-func clearDatabase(db *Database) error {
-	if db.DB == nil {
+func clearDatabase(db *gorm.DB) error {
+	if db == nil {
 		return fmt.Errorf("Database connection unavailable")
 	}
-	err := db.DB.Exec("TRUNCATE TABLE users, tierlists, tierlist_items, submissions, submission_rankings, sessions RESTART IDENTITY CASCADE").Error
+	err := db.Exec("TRUNCATE TABLE users, tierlists, tierlist_items, submissions, submission_rankings, sessions RESTART IDENTITY CASCADE").Error
 	if err != nil {
 		return fmt.Errorf("Failed to drop tables: %v", err)
 	}
@@ -58,15 +60,15 @@ func clearDatabase(db *Database) error {
 	return nil
 }
 
-func migrateDatabase(db *Database) error {
-	if db.DB == nil {
+func migrateDatabase(db *gorm.DB) error {
+	if db == nil {
 		return fmt.Errorf("Database connection unavailable")
 	}
-	err := db.DB.Migrator().DropTable(&models.User{}, &models.Tierlist{}, &models.TierlistItem{}, &models.Submissions{}, &models.SubmissionRankings{}, &models.Session{})
+	err := db.Migrator().DropTable(&models.User{}, &models.Tierlist{}, &models.TierlistItem{}, &models.Submissions{}, &models.SubmissionRankings{}, &models.Session{})
 	if err != nil {
 		return fmt.Errorf("Failed to drop tables: %v", err)
 	}
-	err = db.DB.AutoMigrate(&models.User{}, &models.Tierlist{}, &models.TierlistItem{}, &models.Submissions{}, &models.SubmissionRankings{}, &models.Session{})
+	err = db.AutoMigrate(&models.User{}, &models.Tierlist{}, &models.TierlistItem{}, &models.Submissions{}, &models.SubmissionRankings{}, &models.Session{})
 	if err != nil {
 		return fmt.Errorf("Failed to migrate database: %v", err)
 	}
@@ -74,8 +76,8 @@ func migrateDatabase(db *Database) error {
 	return nil
 }
 
-func seedDatabase(db *Database) error {
-	if db.DB == nil {
+func seedDatabase(db *gorm.DB) error {
+	if db == nil {
 		return fmt.Errorf("Database connection unavailable")
 	}
 	err := seedUsers(db)
@@ -95,7 +97,7 @@ func seedDatabase(db *Database) error {
 	return nil
 }
 
-func seedUsers(db *Database) error {
+func seedUsers(db *gorm.DB) error {
 	var usersJson []byte
 	usersJson, err := os.ReadFile("database/seeds/users.json")
 	if err != nil {
@@ -103,7 +105,7 @@ func seedUsers(db *Database) error {
 	}
 
 	var count int64
-	db.DB.Model(&models.User{}).Count(&count)
+	db.Model(&models.User{}).Count(&count)
 	if count > 0 {
 		fmt.Println("Database already seeded, skipping seeding.")
 		return nil
@@ -115,7 +117,7 @@ func seedUsers(db *Database) error {
 	}
 	for _, user := range users {
 		user.LastLogin = time.Now()
-		if err := db.DB.Create(&user).Error; err != nil {
+		if err := db.Create(&user).Error; err != nil {
 			return fmt.Errorf("Failed to seed users: %v", err)
 		}
 	}
@@ -123,7 +125,7 @@ func seedUsers(db *Database) error {
 	return nil
 }
 
-func seedTierlists(db *Database) error {
+func seedTierlists(db *gorm.DB) error {
 	var tierlistsJson []byte
 	tierlistsJson, err := os.ReadFile("database/seeds/tierlists.json")
 	if err != nil {
@@ -131,35 +133,35 @@ func seedTierlists(db *Database) error {
 	}
 
 	var count int64
-    db.DB.Model(&models.Tierlist{}).Count(&count)
-    if count > 0 {
-        fmt.Println("Tierlists already seeded, skipping")
-        return nil
-    }
+	db.Model(&models.Tierlist{}).Count(&count)
+	if count > 0 {
+		fmt.Println("Tierlists already seeded, skipping")
+		return nil
+	}
 
-    var tierlists []models.Tierlist
-    if err := json.Unmarshal(tierlistsJson, &tierlists); err != nil {
-        return fmt.Errorf("Failed to parse tierlists seed: %w", err)
-    }
+	var tierlists []models.Tierlist
+	if err := json.Unmarshal(tierlistsJson, &tierlists); err != nil {
+		return fmt.Errorf("Failed to parse tierlists seed: %w", err)
+	}
 
-    for _, tl := range tierlists {
-        if err := db.DB.Create(&tl).Error; err != nil {
-            return fmt.Errorf("Failed to seed tierlist: %w", err)
-        }
-    }
+	for _, tl := range tierlists {
+		if err := db.Create(&tl).Error; err != nil {
+			return fmt.Errorf("Failed to seed tierlist: %w", err)
+		}
+	}
 
 	fmt.Println("Tierlists Seeded Successfully")
 	return nil
 }
 
-func seedSubmissions(db *Database) error {
+func seedSubmissions(db *gorm.DB) error {
 	submissionsJson, err := os.ReadFile("database/seeds/submissions.json")
 	if err != nil {
 		return fmt.Errorf("Failed to read submissions seed file: %v", err)
 	}
 
 	var count int64
-	db.DB.Model(&models.Submissions{}).Count(&count)
+	db.Model(&models.Submissions{}).Count(&count)
 	if count > 0 {
 		fmt.Println("Submissions already seeded, skipping")
 		return nil
@@ -171,7 +173,7 @@ func seedSubmissions(db *Database) error {
 	}
 
 	for _, s := range submissions {
-		if err := db.DB.Create(&s).Error; err != nil {
+		if err := db.Create(&s).Error; err != nil {
 			return fmt.Errorf("Failed to seed submission: %w", err)
 		}
 	}

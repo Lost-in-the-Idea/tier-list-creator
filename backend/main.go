@@ -26,7 +26,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	err = database.HandleDatabaseActions(db)
+	err = database.HandleDatabaseActions(db.DB)
 	if err != nil {
 		panic(err)
 	}
