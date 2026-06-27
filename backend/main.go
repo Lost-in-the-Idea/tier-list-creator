@@ -16,20 +16,17 @@ import (
 )
 
 func main() {
-	db := database.Database{}
 	_ = godotenv.Load()
-	var DBName = os.Getenv("DB_NAME")
-	var DBUser = os.Getenv("DB_USER")
-	var DBPassword = os.Getenv("DB_PASSWORD")
-	var DBHost = os.Getenv("DB_HOST")
-	var DBPort = os.Getenv("DB_PORT")
 	var cookieDomain = os.Getenv("COOKIE_DOMAIN")
 
-	err := db.InitialiseDatabase(DBName, DBUser, DBPassword, DBHost, DBPort)
+	db, err := database.NewDatabase(
+		os.Getenv("DB_NAME"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_HOST"), os.Getenv("DB_PORT"),
+	)
 	if err != nil {
 		panic(err)
 	}
-	err = database.HandleDatabaseActions(&db)
+	err = database.HandleDatabaseActions(db)
 	if err != nil {
 		panic(err)
 	}

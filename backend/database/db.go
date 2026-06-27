@@ -10,31 +10,29 @@ import (
 )
 
 type Database struct {
-	DB *gorm.DB
-	SQLDB *sql.DB
+	DB    *gorm.DB
+	sqlDB *sql.DB
 }
 
-func (db *Database) InitialiseDatabase(DBName string, DBUser string, DBPassword string, DBHost string, DBPort string) error {
-	dsn := "host=" + DBHost + " user=" + DBUser + " password=" + DBPassword + " dbname=" + DBName + " port=" + DBPort + " sslmode=disable"
+func NewDatabase(name, user, password, host, port string) (*Database, error) {
+	dsn := "host=" + host + " user=" + user + " password=" + password + " dbname=" + name + " port=" + port + " sslmode=disable"
 	gormDB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	db.DB = gormDB
 
 	sqlDB, err := gormDB.DB()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	db.SQLDB = sqlDB
 
-	err = sqlDB.Ping()
-	if err != nil {
-		return err
+	if err = sqlDB.Ping(); err != nil {
+		return nil, err
 	}
-	return nil
+
+	return &Database{DB: gormDB, sqlDB: sqlDB}, nil
 }
 
 func (db *Database) Close() error {
-	return db.SQLDB.Close()
+	return db.sqlDB.Close()
 }
