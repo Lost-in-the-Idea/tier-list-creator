@@ -23,6 +23,7 @@ DB_USER=your_postgres_user
 DB_PASSWORD=your_postgres_password
 DB_HOST=postgres
 DB_PORT=5432
+COOKIE_DOMAIN="localhost" // localhost for dev
 APP_ENV=dev
 
 # Optional: runs a database action on startup then exits (dev only)

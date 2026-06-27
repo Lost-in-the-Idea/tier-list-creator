@@ -8,9 +8,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func OptionalAuth(svc *services.AuthService) gin.HandlerFunc {
+func OptionalAuth(svc *services.AuthService, cookieDomain string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		session, user, err := svc.ResolveSession(c)
+		token, err := c.Cookie("session_token")
+		if err != nil {
+			c.Next()
+			return
+		}
+		session, user, err := svc.ResolveSession(token)
 		if err != nil {
 			c.Next()
 			return
@@ -21,11 +26,18 @@ func OptionalAuth(svc *services.AuthService) gin.HandlerFunc {
 	}
 }
 
-func AuthRequired(svc *services.AuthService) gin.HandlerFunc {
+func AuthRequired(svc *services.AuthService, cookieDomain string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		session, user, err := svc.ResolveSession(c)
+		token, err := c.Cookie("session_token")
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.Abort()
+			return
+		}
+		session, user, err := svc.ResolveSession(token)
 		if err != nil {
 			if err.Error() == "session expired" {
+				c.SetCookie("session_token", "", -1, "/", cookieDomain, true, true)
 				c.JSON(http.StatusUnauthorized, gin.H{"error": "Session Expired"})
 			} else {
 				c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -38,14 +50,15 @@ func AuthRequired(svc *services.AuthService) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		c.SetCookie("session_token", session.Token, int((time.Hour * 168).Seconds()), "/", "localhost", true, true)
+		c.SetCookie("session_token", session.Token, int((time.Hour * 168).Seconds()), "/", cookieDomain, true, true)
 		c.Set("user", *user)
 		c.Set("session", *session)
 		c.Next()
 	}
 }
 
-func ValidateAuthState(c *gin.Context) {
+func ValidateAuthState(cookieDomain string) gin.HandlerFunc {
+	return func(c *gin.Context) {
 	loginState, err := c.Cookie("login_state")
 	if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "No login state provided"})
@@ -60,6 +73,7 @@ func ValidateAuthState(c *gin.Context) {
 	}
 	
 	// clear cookie after validating to prevent reuse
-	c.SetCookie("login_state", "", -1, "/", "localhost", true, true)
+	c.SetCookie("login_state", "", -1, "/", cookieDomain, true, true)
 	c.Next()
+}
 }
