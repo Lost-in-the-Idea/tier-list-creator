@@ -1,0 +1,100 @@
+@if (loading()) {
+  <div class="flex justify-center py-20">
+    <span class="loading loading-spinner loading-lg"></span>
+  </div>
+} @else if (error() && !tierlist()) {
+  <div class="alert alert-error">
+    <span>{{ error() }}</span>
+  </div>
+} @else if (tierlist(); as tl) {
+  <div class="flex flex-col gap-4">
+    <div>
+      <h1 class="text-2xl font-bold">{{ tl.title }}</h1>
+      @if (tl.description) {
+        <p class="text-base-content/70">{{ tl.description }}</p>
+      }
+      <p class="text-sm text-base-content/50 mt-1">
+        Drag every item into a tier, then submit. You can only submit once.
+      </p>
+    </div>
+
+    @if (error()) {
+      <div class="alert alert-error">
+        <span>{{ error() }}</span>
+      </div>
+    }
+
+    <div class="board" cdkDropListGroup>
+      @for (tier of tiers(); track tier.label) {
+        <div class="tier-row">
+          <div class="tier-label" [style.background-color]="tier.color">
+            {{ tier.label }}
+          </div>
+          <div
+            class="tier-items"
+            cdkDropList
+            [id]="tier.label"
+            [cdkDropListData]="tier.items"
+            [cdkDropListConnectedTo]="connectedIds()"
+            cdkDropListOrientation="horizontal"
+            (cdkDropListDropped)="drop($event)"
+          >
+            @for (item of tier.items; track item.id) {
+              <div class="item" cdkDrag>
+                @if (item.image_url) {
+                  <img class="item-img" [src]="item.image_url" [alt]="item.name" />
+                }
+                <span class="item-name">{{ item.name }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <section>
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-base-content/60 mb-2">
+        Unranked
+      </h2>
+      <div
+        class="tier-items pool-items"
+        cdkDropList
+        [id]="poolId"
+        [cdkDropListData]="pool()"
+        [cdkDropListConnectedTo]="connectedIds()"
+        cdkDropListOrientation="horizontal"
+        (cdkDropListDropped)="drop($event)"
+      >
+        @for (item of pool(); track item.id) {
+          <div class="item" cdkDrag>
+            @if (item.image_url) {
+              <img class="item-img" [src]="item.image_url" [alt]="item.name" />
+            }
+            <span class="item-name">{{ item.name }}</span>
+          </div>
+        } @empty {
+          <p class="empty-hint">All items placed — ready to submit.</p>
+        }
+      </div>
+    </section>
+
+    <div class="flex items-center gap-3">
+      <button
+        class="btn btn-primary"
+        [disabled]="!allPlaced() || submitting()"
+        (click)="submit()"
+      >
+        @if (submitting()) {
+          <span class="loading loading-spinner loading-sm"></span>
+        }
+        Submit ranking
+      </button>
+      <a [routerLink]="['/t', id, 'results']" class="btn btn-ghost">View results</a>
+      @if (!allPlaced()) {
+        <span class="text-sm text-base-content/60">
+          {{ pool().length }} item(s) still unranked
+        </span>
+      }
+    </div>
+  </div>
+}

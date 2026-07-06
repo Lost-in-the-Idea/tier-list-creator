@@ -2,6 +2,7 @@ package routes
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 
@@ -59,12 +60,11 @@ func handleDiscordCallback(c *gin.Context, svc *services.AuthService, cookieDoma
 		return
 	}
 	c.SetCookie("session_token", session.Token, 60*60*24*7, "/", cookieDomain, true, true)
-	c.JSON(http.StatusOK, dto.UserResponse{
-		ID:        user.ID.String(),
-		DiscordID: user.DiscordID,
-		Username:  user.Username,
-		Avatar:    user.Avatar,
-	})
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:4200"
+	}
+	c.Redirect(http.StatusTemporaryRedirect, frontendURL)
 }
 
 func handleLogout(c *gin.Context, svc *services.AuthService, cookieDomain string) {

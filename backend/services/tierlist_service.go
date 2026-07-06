@@ -85,6 +85,7 @@ func (s *TierlistService) Create(req dto.CreateTierlistRequest, creatorID uuid.U
 			}
 		}
 		result = dto.CreateTierlistResponse{
+			ID:        tierlist.ID.String(),
 			ShareCode: tierlist.ShareCode,
 			ExpiresAt: tierlist.ExpiryTime,
 		}

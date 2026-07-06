@@ -1,0 +1,104 @@
+<div class="max-w-2xl mx-auto">
+  <h1 class="text-2xl font-bold mb-4">Create a tier list</h1>
+
+  @if (!user()) {
+    <div class="alert alert-warning mb-4">
+      <span>You need to be logged in to create a tier list.</span>
+    </div>
+  }
+
+  @if (error()) {
+    <div class="alert alert-error mb-4">
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  <form class="flex flex-col gap-4" (submit)="submit(); $event.preventDefault()">
+    <label class="form-control">
+      <span class="label-text mb-1">Title</span>
+      <input
+        class="input input-bordered w-full"
+        type="text"
+        placeholder="e.g. Best pizza toppings"
+        [value]="title()"
+        (input)="title.set($any($event.target).value)"
+      />
+    </label>
+
+    <label class="form-control">
+      <span class="label-text mb-1">Description (optional)</span>
+      <textarea
+        class="textarea textarea-bordered w-full"
+        rows="2"
+        placeholder="What's this tier list about?"
+        [value]="description()"
+        (input)="description.set($any($event.target).value)"
+      ></textarea>
+    </label>
+
+    <label class="form-control">
+      <span class="label-text mb-1">Voting closes at</span>
+      <input
+        class="input input-bordered w-full"
+        type="datetime-local"
+        [value]="expiry()"
+        (input)="expiry.set($any($event.target).value)"
+      />
+    </label>
+
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <span class="label-text">Items ({{ filledItems() }}/15, at least 2)</span>
+        <button
+          type="button"
+          class="btn btn-sm btn-outline"
+          [disabled]="items().length >= 15"
+          (click)="addItem()"
+        >
+          + Add item
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        @for (item of items(); track $index) {
+          <div class="flex gap-2 items-start">
+            <input
+              class="input input-bordered flex-1"
+              type="text"
+              [placeholder]="'Item ' + ($index + 1) + ' name'"
+              [value]="item.name"
+              (input)="updateItem($index, 'name', $any($event.target).value)"
+            />
+            <input
+              class="input input-bordered flex-1"
+              type="text"
+              placeholder="Image URL (optional)"
+              [value]="item.image_url"
+              (input)="updateItem($index, 'image_url', $any($event.target).value)"
+            />
+            <button
+              type="button"
+              class="btn btn-ghost btn-square"
+              title="Remove"
+              [disabled]="items().length <= 2"
+              (click)="removeItem($index)"
+            >
+              ✕
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+
+    <button
+      type="submit"
+      class="btn btn-primary"
+      [disabled]="!canSubmit() || submitting() || !user()"
+    >
+      @if (submitting()) {
+        <span class="loading loading-spinner loading-sm"></span>
+      }
+      Create tier list
+    </button>
+  </form>
+</div>
