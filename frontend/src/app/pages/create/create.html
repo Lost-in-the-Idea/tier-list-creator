@@ -76,6 +76,15 @@
               [value]="item.image_url"
               (input)="updateItem($index, 'image_url', $any($event.target).value)"
             />
+            @if (item.image_url.trim()) {
+              <img
+                class="w-11 h-11 rounded object-cover border border-base-300 shrink-0"
+                [src]="item.image_url"
+                alt="preview"
+                (error)="$any($event.target).style.visibility = 'hidden'"
+                (load)="$any($event.target).style.visibility = 'visible'"
+              />
+            }
             <button
               type="button"
               class="btn btn-ghost btn-square"

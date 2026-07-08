@@ -3,8 +3,10 @@
     <span class="loading loading-spinner loading-lg"></span>
   </div>
 } @else if (error()) {
-  <div class="alert alert-error">
-    <span>{{ error() }}</span>
+  <div class="flex flex-col items-center text-center gap-4 py-16">
+    <p class="text-5xl">🤔</p>
+    <p class="text-lg font-medium">{{ error() }}</p>
+    <a routerLink="/" class="btn btn-primary">Back to home</a>
   </div>
 } @else if (data(); as d) {
   <div class="flex flex-col gap-4">

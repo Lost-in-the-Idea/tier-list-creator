@@ -3,19 +3,30 @@
     <span class="loading loading-spinner loading-lg"></span>
   </div>
 } @else if (error() && !tierlist()) {
-  <div class="alert alert-error">
-    <span>{{ error() }}</span>
+  <div class="flex flex-col items-center text-center gap-4 py-16">
+    <p class="text-5xl">🤔</p>
+    <p class="text-lg font-medium">{{ error() }}</p>
+    <a routerLink="/" class="btn btn-primary">Back to home</a>
   </div>
 } @else if (tierlist(); as tl) {
   <div class="flex flex-col gap-4">
-    <div>
-      <h1 class="text-2xl font-bold">{{ tl.title }}</h1>
-      @if (tl.description) {
-        <p class="text-base-content/70">{{ tl.description }}</p>
-      }
-      <p class="text-sm text-base-content/50 mt-1">
-        Drag every item into a tier, then submit. You can only submit once.
-      </p>
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h1 class="text-2xl font-bold">{{ tl.title }}</h1>
+        @if (tl.description) {
+          <p class="text-base-content/70">{{ tl.description }}</p>
+        }
+        <p class="text-sm text-base-content/50 mt-1">
+          Drag every item into a tier, then submit. You can only submit once.
+        </p>
+      </div>
+      <button class="btn btn-outline btn-sm shrink-0" type="button" (click)="copyShareLink()">
+        @if (copied()) {
+          Copied!
+        } @else {
+          Copy share link
+        }
+      </button>
     </div>
 
     @if (error()) {

@@ -39,6 +39,7 @@ export class Vote {
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly submitting = signal(false);
+  protected readonly copied = signal(false);
 
   protected readonly tiers = signal<TierBucket[]>(
     TIERS.map((t) => ({ label: t.label, color: t.color, items: [] })),
@@ -77,6 +78,19 @@ export class Vote {
         );
       },
     });
+  }
+
+  copyShareLink(): void {
+    const url = window.location.href;
+    navigator.clipboard
+      ?.writeText(url)
+      .then(() => {
+        this.copied.set(true);
+        setTimeout(() => this.copied.set(false), 2000);
+      })
+      .catch(() => {
+        // Clipboard may be unavailable (e.g. insecure context); fail silently.
+      });
   }
 
   drop(event: CdkDragDrop<TierlistItem[]>): void {
