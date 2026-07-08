@@ -2,10 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Frontend</title>
+  <title>Tier List Creator</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Create tier lists, share the link, and let everyone rank items from S to F — then see the aggregated community results.">
+
+  <!-- Open Graph / social share previews -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Tier List Creator">
+  <meta property="og:description" content="Build a tier list, share the link, and vote from S to F.">
+
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <meta name="theme-color" content="#605dff">
+
+  <!-- Apply the saved/preferred theme before first paint to avoid a flash. -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('theme');
+        if (t !== 'light' && t !== 'dark') {
+          t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

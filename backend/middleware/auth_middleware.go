@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"net/http"
 	"tierlist/services"
 	"time"
@@ -36,7 +37,7 @@ func AuthRequired(svc *services.AuthService, cookieDomain string) gin.HandlerFun
 		}
 		session, user, err := svc.ResolveSession(token)
 		if err != nil {
-			if err.Error() == "session expired" {
+			if errors.Is(err, services.ErrSessionExpired) {
 				c.SetCookie("session_token", "", -1, "/", cookieDomain, true, true)
 				c.JSON(http.StatusUnauthorized, gin.H{"error": "Session Expired"})
 			} else {
@@ -59,21 +60,21 @@ func AuthRequired(svc *services.AuthService, cookieDomain string) gin.HandlerFun
 
 func ValidateAuthState(cookieDomain string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-	loginState, err := c.Cookie("login_state")
-	if err != nil {
+		loginState, err := c.Cookie("login_state")
+		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "No login state provided"})
 			c.Abort()
 			return
 		}
 
-	if loginState != c.Query("state") {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid login state"})
-		c.Abort()
-		return
+		if loginState != c.Query("state") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid login state"})
+			c.Abort()
+			return
+		}
+
+		// clear cookie after validating to prevent reuse
+		c.SetCookie("login_state", "", -1, "/", cookieDomain, true, true)
+		c.Next()
 	}
-	
-	// clear cookie after validating to prevent reuse
-	c.SetCookie("login_state", "", -1, "/", cookieDomain, true, true)
-	c.Next()
-}
 }

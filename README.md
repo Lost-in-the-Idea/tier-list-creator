@@ -12,24 +12,18 @@
 1. Create a new discord application at the [Discord Developer Portal](https://discord.com/developers/applications).
 2. Under "OAuth2" > Add a redirect URI: `http://localhost:8080/api/auth/discord/callback`
 3. Copy the Client ID and Client Secret, these are needed for the environment variables.
+4. Dev: Redirect Links
+http://localhost:8080/api/auth/discord/redirect
+http://localhost:8080/api/auth/discord/callback
 
 ### 2. Create a `.env` file at the repo root
 
 ```
-DISCORD_CLIENT_ID=your_discord_client_id
-DISCORD_CLIENT_SECRET=your_discord_client_secret
-DB_NAME=your_database_name
-DB_USER=your_postgres_user
-DB_PASSWORD=your_postgres_password
-DB_HOST=postgres
-DB_PORT=5432
-COOKIE_DOMAIN="localhost" // localhost for dev
-APP_ENV=dev
-
-# Optional: runs a database action on startup then exits (dev only)
-# Values: migrate, seed, clear (comma separated for multiple actions)
-DB_ACTION=
+cp .env.example.dev .env
 ```
+
+Then fill in `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET`. The rest of the
+values are ready to use for local Docker development as-is.
 
 `DB_HOST` must be `postgres` when running via Docker (it references the postgres service name).
 
@@ -77,6 +71,10 @@ docker compose run --rm -e DB_ACTION=migrate,seed backend
 
 `docker compose down -v` wipes the database volume. `migrate` recreates the schema, `seed` is optional.
 
+> Note: `migrate` only **drops and recreates** tables when `APP_ENV=dev`. In any
+> other environment `migrate` is **forward-only** (`AutoMigrate` — it adds new
+> tables/columns/indexes but never drops existing data).
+
 ### 6. Useful notes
 
 Service names are `backend`, `frontend`, and `postgres` (for database commands). Use these in place of `<service_name>` in the commands below.
@@ -103,3 +101,33 @@ docker compose restart <service_name>
 # Tail logs for a service
 docker compose logs -f <service_name>
 ```
+
+## Production / Deployment
+
+The dev stack above (`docker-compose.yml`) uses hot-reload images and mounts
+source; it is **not** for hosting. Production uses separate artifacts:
+
+- `backend/Dockerfile.prod` — compiled, non-root Go binary.
+- `frontend/Dockerfile.prod` + `frontend/nginx.conf` — `ng build` served by nginx.
+- `Caddyfile` — reverse proxy that terminates TLS (automatic Let's Encrypt),
+  serves the SPA, and proxies `/api/*` to the backend, so the whole app is
+  **same-origin** (no CORS needed; the session cookie just works).
+- `docker-compose.prod.yml` — postgres + backend + frontend + Caddy, with
+  healthchecks and `restart: unless-stopped`. Postgres is **not** published to
+  the host; only Caddy exposes `80`/`443`.
+- `.env.example.prod` — copy to `.env` and fill in. Requires a real
+  `DOMAIN`/`APP_URL`/`FRONTEND_URL`/`COOKIE_DOMAIN` (all HTTPS, same domain),
+  and the Discord portal must include `https://<domain>/api/auth/discord/callback`.
+
+Local prod-parity test:
+
+```
+cp .env.example.prod .env   # set DOMAIN=localhost, secrets; HTTPS URLs can stay as-is
+docker compose -f docker-compose.prod.yml up --build
+# then run the one-shot schema migration:
+docker compose -f docker-compose.prod.yml run --rm -e DB_ACTION=migrate backend
+```
+
+CI/CD (`.github/workflows/ci-cd.yml`) builds/tests on every push and PR, and on
+push to `main` publishes images to GHCR. The deploy job auto-skips until the
+`DEPLOY_*` secrets (VM host/user/key/path) are configured.

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -16,6 +17,8 @@ import (
 
 	"tierlist/database/models"
 )
+
+var ErrSessionExpired = errors.New("session expired")
 
 type AuthService struct {
 	db   *gorm.DB
@@ -48,7 +51,12 @@ func (s *AuthService) GetDiscordUserInfo(ctx context.Context, token *oauth2.Toke
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			fmt.Printf("Error closing response body: %v\n", err)
+		}
+	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("discord API returned status %d", resp.StatusCode)
@@ -135,7 +143,7 @@ func (s *AuthService) ResolveSession(token string) (*models.Session, *models.Use
 
 	if time.Now().After(session.ExpiresAt) {
 		s.db.Delete(&session)
-		return nil, nil, errors.New("session expired")
+		return nil, nil, ErrSessionExpired
 	}
 
 	var user models.User

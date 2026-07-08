@@ -3,21 +3,25 @@ package routes
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
 	"tierlist/database/models"
 	"tierlist/dto"
+	"tierlist/middleware"
 	"tierlist/services"
 )
 
 func SetupTierlistRoutes(api *gin.RouterGroup, svc *services.TierlistService, authRequired, optionalAuth gin.HandlerFunc) {
 	tierlists := api.Group("/tierlists")
+	// Limit the write endpoints to curb spam creation/submission.
+	writeLimit := middleware.RateLimit(30, time.Minute)
 	tierlists.GET("/:id/results", func(c *gin.Context) { getTierlistResults(c, svc) })
 	tierlists.GET("/:id", optionalAuth, func(c *gin.Context) { getTierlistById(c, svc) })
-	tierlists.POST("/", authRequired, func(c *gin.Context) { createNewTierlist(c, svc) })
-	tierlists.POST("/:id/submit", authRequired, func(c *gin.Context) { submitTierlist(c, svc) })
+	tierlists.POST("/", authRequired, writeLimit, func(c *gin.Context) { createNewTierlist(c, svc) })
+	tierlists.POST("/:id/submit", authRequired, writeLimit, func(c *gin.Context) { submitTierlist(c, svc) })
 	tierlists.DELETE("/:id", authRequired, func(c *gin.Context) { deleteById(c, svc) })
 }
 
@@ -43,7 +47,7 @@ func getTierlistById(c *gin.Context, svc *services.TierlistService) {
 func createNewTierlist(c *gin.Context, svc *services.TierlistService) {
 	var req dto.CreateTierlistRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
 	creatorID := c.MustGet("user").(models.User).ID
@@ -59,7 +63,7 @@ func submitTierlist(c *gin.Context, svc *services.TierlistService) {
 	id := c.Param("id")
 	var req dto.SubmitRankingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
 	userID := c.MustGet("user").(models.User).ID
@@ -70,6 +74,8 @@ func submitTierlist(c *gin.Context, svc *services.TierlistService) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Tierlist not found"})
 		case errors.Is(err, services.ErrConflict):
 			c.JSON(http.StatusConflict, gin.H{"error": "Already submitted"})
+		case errors.Is(err, services.ErrExpired):
+			c.JSON(http.StatusForbidden, gin.H{"error": "Voting has closed"})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database Error"})
 		}

@@ -1,0 +1,74 @@
+# Production stack. Two topologies share this file:
+#   - Local prod-parity test: `docker compose -f docker-compose.prod.yml up --build`
+#     builds the images locally (tagged *:local).
+#   - On the VM: set BACKEND_IMAGE / FRONTEND_IMAGE to the ghcr.io tags and run
+#     `docker compose -f docker-compose.prod.yml pull && ... up -d` to pull the
+#     images CI already built.
+#
+# Required env (via a root .env file, not committed): DB_NAME, DB_USER,
+# DB_PASSWORD, DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DOMAIN, APP_URL,
+# FRONTEND_URL, COOKIE_DOMAIN, APP_ENV=production. See .env.example.prod.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Not published to the host — only reachable on the internal compose network.
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: ${BACKEND_IMAGE:-tierlist-backend:local}
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    env_file:
+      - ./.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-tierlist-frontend:local}
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
