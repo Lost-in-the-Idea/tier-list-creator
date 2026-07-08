@@ -9,7 +9,7 @@
 .tier-row {
   display: flex;
   min-height: 84px;
-  background: #15171c;
+  background: var(--color-base-300);
 }
 
 .tier-label {
@@ -17,7 +17,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #1a1a1a;
+  color: #1a1a1a; /* tier labels always sit on a bright accent colour */
   font-weight: 800;
   font-size: 1.5rem;
   user-select: none;
@@ -34,8 +34,8 @@
 }
 
 .pool-items {
-  background: #15171c;
-  border: 1px dashed #3a3e4a;
+  background: var(--color-base-300);
+  border: 1px dashed color-mix(in oklch, var(--color-base-content) 25%, transparent);
   border-radius: 0.5rem;
 }
 
@@ -45,16 +45,17 @@
   align-items: center;
   justify-content: center;
   gap: 0.25rem;
-  background: #2b2e38;
-  border: 1px solid #3a3e4a;
+  background: var(--color-base-100);
+  border: 1px solid color-mix(in oklch, var(--color-base-content) 15%, transparent);
   border-radius: 0.4rem;
   padding: 0.4rem;
   width: 84px;
   min-height: 72px;
   text-align: center;
-  color: #f5f5f5;
+  color: var(--color-base-content);
   cursor: grab;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  touch-action: none; /* let CDK own the touch gesture so dragging works on mobile */
 }
 
 .item:active {
@@ -75,7 +76,7 @@
 }
 
 .empty-hint {
-  color: #6b7280;
+  color: color-mix(in oklch, var(--color-base-content) 55%, transparent);
   font-size: 0.9rem;
   padding: 0.75rem;
 }
@@ -103,6 +104,6 @@
 }
 
 .cdk-drop-list-receiving {
-  outline: 2px dashed #4f46e5;
+  outline: 2px dashed var(--color-primary);
   outline-offset: -2px;
 }

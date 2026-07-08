@@ -9,7 +9,7 @@
 .tier-row {
   display: flex;
   min-height: 84px;
-  background: #15171c;
+  background: var(--color-base-300);
 }
 
 .tier-label {
@@ -17,7 +17,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #1a1a1a;
+  color: #1a1a1a; /* tier labels always sit on a bright accent colour */
   font-weight: 800;
   font-size: 1.5rem;
   user-select: none;
@@ -34,8 +34,8 @@
 }
 
 .pool-items {
-  background: #15171c;
-  border: 1px dashed #3a3e4a;
+  background: var(--color-base-300);
+  border: 1px dashed color-mix(in oklch, var(--color-base-content) 25%, transparent);
   border-radius: 0.5rem;
 }
 
@@ -45,14 +45,14 @@
   align-items: center;
   justify-content: center;
   gap: 0.25rem;
-  background: #2b2e38;
-  border: 1px solid #3a3e4a;
+  background: var(--color-base-100);
+  border: 1px solid color-mix(in oklch, var(--color-base-content) 15%, transparent);
   border-radius: 0.4rem;
   padding: 0.4rem;
   width: 84px;
   min-height: 72px;
   text-align: center;
-  color: #f5f5f5;
+  color: var(--color-base-content);
 }
 
 .item-img {

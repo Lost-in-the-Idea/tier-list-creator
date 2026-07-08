@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Tier List Creator">
+  <rect width="64" height="64" rx="14" fill="#605dff"/>
+  <rect x="10" y="13" width="44" height="11" rx="3" fill="#ff7f7f"/>
+  <rect x="10" y="27" width="44" height="11" rx="3" fill="#ffdf7f"/>
+  <rect x="10" y="41" width="44" height="11" rx="3" fill="#7fdfff"/>
+</svg>

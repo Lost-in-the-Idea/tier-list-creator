@@ -14,6 +14,7 @@ export class App {
 
   protected readonly user = this.auth.user;
   protected readonly menuOpen = signal(false);
+  protected readonly theme = signal<'light' | 'dark'>(this.initialTheme());
 
   constructor() {
     this.auth.loadCurrentUser().subscribe();
@@ -25,6 +26,29 @@ export class App {
 
   logout(): void {
     this.auth.logout().subscribe();
+  }
+
+  toggleTheme(): void {
+    const next = this.theme() === 'dark' ? 'light' : 'dark';
+    this.theme.set(next);
+    document.documentElement.setAttribute('data-theme', next);
+    try {
+      localStorage.setItem('theme', next);
+    } catch {
+      // ignore storage failures (e.g. private mode)
+    }
+  }
+
+  private initialTheme(): 'light' | 'dark' {
+    try {
+      const stored = localStorage.getItem('theme');
+      if (stored === 'light' || stored === 'dark') {
+        return stored;
+      }
+    } catch {
+      // ignore
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
 
   avatarUrl(discordId: string, avatar: string): string {

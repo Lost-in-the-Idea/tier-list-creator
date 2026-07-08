@@ -1,4 +1,15 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import 'tailwindcss';
-@plugin "daisyui";
+
+/* Enable the light and dark DaisyUI themes. `light` is the default; `dark` is
+   applied when the user's OS prefers dark, and either can be forced by setting
+   data-theme on <html> (see the theme toggle in the header). */
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark;
+}
+
+/* Smooth the transition when toggling themes. */
+:root {
+  color-scheme: light dark;
+}
