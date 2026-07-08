@@ -14,8 +14,11 @@ type Database struct {
 	sqlDB *sql.DB
 }
 
-func NewDatabase(name, user, password, host, port string) (*Database, error) {
-	dsn := "host=" + host + " user=" + user + " password=" + password + " dbname=" + name + " port=" + port + " sslmode=disable"
+func NewDatabase(name, user, password, host, port, sslMode string) (*Database, error) {
+	if sslMode == "" {
+		sslMode = "disable"
+	}
+	dsn := "host=" + host + " user=" + user + " password=" + password + " dbname=" + name + " port=" + port + " sslmode=" + sslMode
 	gormDB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err

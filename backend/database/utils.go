@@ -21,11 +21,12 @@ func HandleDatabaseActions(db *gorm.DB) error {
 		return nil
 	}
 
+	isDev := env == "dev"
 	actionList := strings.Split(actions, ",")
 	for _, action := range actionList {
 		switch strings.TrimSpace(action) {
 		case "migrate":
-			err := migrateDatabase(db)
+			err := migrateDatabase(db, isDev)
 			if err != nil {
 				return fmt.Errorf("Failed to migrate database: %v", err)
 			}
@@ -60,15 +61,20 @@ func clearDatabase(db *gorm.DB) error {
 	return nil
 }
 
-func migrateDatabase(db *gorm.DB) error {
+func migrateDatabase(db *gorm.DB, dev bool) error {
 	if db == nil {
 		return fmt.Errorf("Database connection unavailable")
 	}
-	err := db.Migrator().DropTable(&models.User{}, &models.Tierlist{}, &models.TierlistItem{}, &models.Submissions{}, &models.SubmissionRankings{}, &models.Session{})
-	if err != nil {
-		return fmt.Errorf("Failed to drop tables: %v", err)
+	// Dropping tables destroys all data, so it is only ever allowed in dev.
+	// In every other environment migrate is forward-only (AutoMigrate adds new
+	// columns/tables/indexes but never drops existing data).
+	if dev {
+		err := db.Migrator().DropTable(&models.User{}, &models.Tierlist{}, &models.TierlistItem{}, &models.Submissions{}, &models.SubmissionRankings{}, &models.Session{})
+		if err != nil {
+			return fmt.Errorf("Failed to drop tables: %v", err)
+		}
 	}
-	err = db.AutoMigrate(&models.User{}, &models.Tierlist{}, &models.TierlistItem{}, &models.Submissions{}, &models.SubmissionRankings{}, &models.Session{})
+	err := db.AutoMigrate(&models.User{}, &models.Tierlist{}, &models.TierlistItem{}, &models.Submissions{}, &models.SubmissionRankings{}, &models.Session{})
 	if err != nil {
 		return fmt.Errorf("Failed to migrate database: %v", err)
 	}

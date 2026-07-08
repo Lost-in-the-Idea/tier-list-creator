@@ -1,7 +1,8 @@
 package main
 
 import (
-	"os"
+	"log"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -9,39 +10,43 @@ import (
 	discord "github.com/ravener/discord-oauth2"
 	"golang.org/x/oauth2"
 
+	"tierlist/config"
 	"tierlist/database"
-	"tierlist/middleware"
 	"tierlist/routes"
 	"tierlist/services"
+
+	"tierlist/middleware"
 )
 
 func main() {
 	_ = godotenv.Load()
-	var cookieDomain = os.Getenv("COOKIE_DOMAIN")
+
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("configuration error: %v", err)
+	}
 
 	db, err := database.NewDatabase(
-		os.Getenv("DB_NAME"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_HOST"), os.Getenv("DB_PORT"),
+		cfg.DBName, cfg.DBUser, cfg.DBPassword,
+		cfg.DBHost, cfg.DBPort, cfg.DBSSLMode,
 	)
 	if err != nil {
-		panic(err)
+		log.Fatalf("database error: %v", err)
 	}
-	err = database.HandleDatabaseActions(db.DB)
-	if err != nil {
-		panic(err)
+	if err := database.HandleDatabaseActions(db.DB); err != nil {
+		log.Fatalf("database action error: %v", err)
 	}
 	defer db.Close()
 
 	oauthConf := &oauth2.Config{
-		ClientID:     os.Getenv("DISCORD_CLIENT_ID"),
-		ClientSecret: os.Getenv("DISCORD_CLIENT_SECRET"),
-		RedirectURL:  "http://localhost:8080/api/auth/discord/callback",
+		ClientID:     cfg.DiscordClientID,
+		ClientSecret: cfg.DiscordClientSecret,
+		RedirectURL:  cfg.OAuthRedirectURL(),
 		Scopes:       []string{discord.ScopeIdentify},
 		Endpoint:     discord.Endpoint,
 	}
 	authSvc := services.NewAuthService(db.DB, oauthConf)
 	tierlistSvc := services.NewTierlistService(db.DB)
-	userSvc := services.NewUserService(db.DB)
 
 	go func() {
 		ticker := time.NewTicker(time.Hour)
@@ -51,13 +56,32 @@ func main() {
 		}
 	}()
 
-	authRequired := middleware.AuthRequired(authSvc, cookieDomain)
-	optionalAuth := middleware.OptionalAuth(authSvc, cookieDomain)
+	authRequired := middleware.AuthRequired(authSvc, cfg.CookieDomain)
+	optionalAuth := middleware.OptionalAuth(authSvc, cfg.CookieDomain)
+
+	if !cfg.IsDev() {
+		gin.SetMode(gin.ReleaseMode)
+	}
 
 	r := gin.Default()
+	// Default every cookie this app sets to SameSite=Lax. The frontend is served
+	// same-origin behind the reverse proxy, so Lax keeps the top-level Discord
+	// login redirect working while blocking cross-site cookie sending.
+	r.Use(func(c *gin.Context) {
+		c.SetSameSite(http.SameSiteLaxMode)
+		c.Next()
+	})
+
+	// Lightweight liveness endpoint for container healthchecks and the proxy.
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
+
 	api := r.Group("/api")
 	routes.SetupTierlistRoutes(api, tierlistSvc, authRequired, optionalAuth)
-	routes.SetupUserRoutes(api, userSvc, authRequired)
-	routes.SetupAuthenticationRoutes(api, authSvc, cookieDomain)
-	r.Run()
+	routes.SetupAuthenticationRoutes(api, authSvc, cfg.CookieDomain, cfg.FrontendURL)
+
+	if err := r.Run(":" + cfg.Port); err != nil {
+		log.Fatalf("server error: %v", err)
+	}
 }

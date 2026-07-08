@@ -80,6 +80,10 @@ docker compose run --rm -e DB_ACTION=migrate,seed backend
 
 `docker compose down -v` wipes the database volume. `migrate` recreates the schema, `seed` is optional.
 
+> Note: `migrate` only **drops and recreates** tables when `APP_ENV=dev`. In any
+> other environment `migrate` is **forward-only** (`AutoMigrate` — it adds new
+> tables/columns/indexes but never drops existing data).
+
 ### 6. Useful notes
 
 Service names are `backend`, `frontend`, and `postgres` (for database commands). Use these in place of `<service_name>` in the commands below.
@@ -106,3 +110,33 @@ docker compose restart <service_name>
 # Tail logs for a service
 docker compose logs -f <service_name>
 ```
+
+## Production / Deployment
+
+The dev stack above (`docker-compose.yml`) uses hot-reload images and mounts
+source; it is **not** for hosting. Production uses separate artifacts:
+
+- `backend/Dockerfile.prod` — compiled, non-root Go binary.
+- `frontend/Dockerfile.prod` + `frontend/nginx.conf` — `ng build` served by nginx.
+- `Caddyfile` — reverse proxy that terminates TLS (automatic Let's Encrypt),
+  serves the SPA, and proxies `/api/*` to the backend, so the whole app is
+  **same-origin** (no CORS needed; the session cookie just works).
+- `docker-compose.prod.yml` — postgres + backend + frontend + Caddy, with
+  healthchecks and `restart: unless-stopped`. Postgres is **not** published to
+  the host; only Caddy exposes `80`/`443`.
+- `.env.example` — copy to `.env` and fill in. Production requires `APP_ENV=production`,
+  a real `DOMAIN`/`APP_URL`/`FRONTEND_URL`/`COOKIE_DOMAIN` (all HTTPS, same domain),
+  and the Discord portal must include `https://<domain>/api/auth/discord/callback`.
+
+Local prod-parity test:
+
+```
+cp .env.example .env   # set APP_ENV=production, DOMAIN=localhost, HTTPS URLs, secrets
+docker compose -f docker-compose.prod.yml up --build
+# then run the one-shot schema migration:
+docker compose -f docker-compose.prod.yml run --rm -e DB_ACTION=migrate backend
+```
+
+CI/CD (`.github/workflows/ci-cd.yml`) builds/tests on every push and PR, and on
+push to `main` publishes images to GHCR. The deploy job auto-skips until the
+`DEPLOY_*` secrets (VM host/user/key/path) are configured.
