@@ -1,0 +1,126 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend — build, vet, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache-dependency-path: backend/go.sum
+      - name: Build, vet, test
+        working-directory: backend
+        run: |
+          go build ./...
+          go vet ./...
+          go test ./...
+
+  frontend:
+    name: Frontend — build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install & build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+  # Build and publish production images to GHCR on every push to main.
+  # This runs with no VM required — you get tested, published images from day one.
+  images:
+    name: Build & push images (GHCR)
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build & push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile.prod
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/tierlist-backend:latest
+            ghcr.io/${{ github.repository_owner }}/tierlist-backend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Build & push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile.prod
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/tierlist-frontend:latest
+            ghcr.io/${{ github.repository_owner }}/tierlist-frontend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Deploy is GATED: it no-ops until a VM exists and the DEPLOY_* secrets are set.
+  # Once you have a droplet, add the secrets (see readiness-plan.md Phase 3/4) and
+  # this job pulls the freshly built images onto the VM automatically.
+  deploy:
+    name: Deploy to VM (gated)
+    needs: images
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check deploy target is configured
+        id: gate
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          if [ -n "$DEPLOY_HOST" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::DEPLOY_HOST secret not set — skipping deploy (no VM yet)."
+          fi
+      - name: Deploy over SSH
+        if: steps.gate.outputs.enabled == 'true'
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          envs: GITHUB_SHA,GITHUB_ACTOR
+          script: |
+            set -e
+            cd "${{ secrets.DEPLOY_PATH }}"
+            git pull --ff-only
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+            export BACKEND_IMAGE="ghcr.io/${{ github.repository_owner }}/tierlist-backend:${GITHUB_SHA}"
+            export FRONTEND_IMAGE="ghcr.io/${{ github.repository_owner }}/tierlist-frontend:${GITHUB_SHA}"
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
+            docker image prune -f

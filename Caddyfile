@@ -1,0 +1,22 @@
+# Reverse proxy + automatic TLS for the whole app, served under one domain so
+# the frontend and API share an origin (keeps the session cookie working without
+# CORS). Set DOMAIN in the environment; defaults to localhost for local testing
+# (Caddy issues a local self-signed cert in that case).
+#
+# For a real domain, Caddy obtains and renews Let's Encrypt certificates
+# automatically, provided ports 80/443 are reachable and DNS points here.
+
+{$DOMAIN:localhost} {
+	encode gzip zstd
+
+	# API traffic goes to the Go backend.
+	@api path /api/*
+	handle @api {
+		reverse_proxy backend:8080
+	}
+
+	# Everything else is the Angular SPA (served by its nginx container).
+	handle {
+		reverse_proxy frontend:80
+	}
+}
