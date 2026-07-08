@@ -19,20 +19,11 @@ http://localhost:8080/api/auth/discord/callback
 ### 2. Create a `.env` file at the repo root
 
 ```
-DISCORD_CLIENT_ID=your_discord_client_id
-DISCORD_CLIENT_SECRET=your_discord_client_secret
-DB_NAME=your_database_name
-DB_USER=your_postgres_user
-DB_PASSWORD=your_postgres_password
-DB_HOST=postgres
-DB_PORT=5432
-COOKIE_DOMAIN="localhost" // localhost for dev
-APP_ENV=dev
-
-# Optional: runs a database action on startup then exits (dev only)
-# Values: migrate, seed, clear (comma separated for multiple actions)
-DB_ACTION=
+cp .env.example.dev .env
 ```
+
+Then fill in `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET`. The rest of the
+values are ready to use for local Docker development as-is.
 
 `DB_HOST` must be `postgres` when running via Docker (it references the postgres service name).
 
@@ -124,14 +115,14 @@ source; it is **not** for hosting. Production uses separate artifacts:
 - `docker-compose.prod.yml` — postgres + backend + frontend + Caddy, with
   healthchecks and `restart: unless-stopped`. Postgres is **not** published to
   the host; only Caddy exposes `80`/`443`.
-- `.env.example` — copy to `.env` and fill in. Production requires `APP_ENV=production`,
-  a real `DOMAIN`/`APP_URL`/`FRONTEND_URL`/`COOKIE_DOMAIN` (all HTTPS, same domain),
+- `.env.example.prod` — copy to `.env` and fill in. Requires a real
+  `DOMAIN`/`APP_URL`/`FRONTEND_URL`/`COOKIE_DOMAIN` (all HTTPS, same domain),
   and the Discord portal must include `https://<domain>/api/auth/discord/callback`.
 
 Local prod-parity test:
 
 ```
-cp .env.example .env   # set APP_ENV=production, DOMAIN=localhost, HTTPS URLs, secrets
+cp .env.example.prod .env   # set DOMAIN=localhost, secrets; HTTPS URLs can stay as-is
 docker compose -f docker-compose.prod.yml up --build
 # then run the one-shot schema migration:
 docker compose -f docker-compose.prod.yml run --rm -e DB_ACTION=migrate backend

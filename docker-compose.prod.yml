@@ -7,7 +7,7 @@
 #
 # Required env (via a root .env file, not committed): DB_NAME, DB_USER,
 # DB_PASSWORD, DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DOMAIN, APP_URL,
-# FRONTEND_URL, COOKIE_DOMAIN, APP_ENV=production. See .env.example.
+# FRONTEND_URL, COOKIE_DOMAIN, APP_ENV=production. See .env.example.prod.
 
 services:
   postgres:
