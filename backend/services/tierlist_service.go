@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -16,6 +17,7 @@ var (
 	ErrNotFound  = errors.New("not found")
 	ErrForbidden = errors.New("forbidden")
 	ErrConflict  = errors.New("already submitted")
+	ErrExpired   = errors.New("voting closed")
 )
 
 type TierlistService struct {
@@ -104,6 +106,11 @@ func (s *TierlistService) Submit(id string, userID uuid.UUID, req dto.SubmitRank
 			return ErrNotFound
 		}
 		return err
+	}
+
+	// Reject submissions once voting has closed.
+	if time.Now().After(tierlist.ExpiryTime) {
+		return ErrExpired
 	}
 
 	var existing models.Submissions

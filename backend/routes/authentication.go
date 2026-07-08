@@ -1,8 +1,9 @@
 package routes
 
 import (
+	"log"
 	"net/http"
-	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -12,10 +13,12 @@ import (
 	"tierlist/services"
 )
 
-func SetupAuthenticationRoutes(api *gin.RouterGroup, svc *services.AuthService, cookieDomain string) {
+func SetupAuthenticationRoutes(api *gin.RouterGroup, svc *services.AuthService, cookieDomain, frontendURL string) {
 	authentication := api.Group("/auth")
-	authentication.GET("/discord/redirect", func(c *gin.Context) { handleDiscordRedirect(c, svc, cookieDomain) })
-	authentication.GET("/discord/callback", middleware.ValidateAuthState(cookieDomain), func(c *gin.Context) { handleDiscordCallback(c, svc, cookieDomain) })
+	// Rate-limit the OAuth entry points to blunt automated abuse of the login flow.
+	authLimit := middleware.RateLimit(20, time.Minute)
+	authentication.GET("/discord/redirect", authLimit, func(c *gin.Context) { handleDiscordRedirect(c, svc, cookieDomain) })
+	authentication.GET("/discord/callback", authLimit, middleware.ValidateAuthState(cookieDomain), func(c *gin.Context) { handleDiscordCallback(c, svc, cookieDomain, frontendURL) })
 
 	protected := authentication.Group("/")
 	protected.Use(middleware.AuthRequired(svc, cookieDomain))
@@ -33,7 +36,7 @@ func handleDiscordRedirect(c *gin.Context, svc *services.AuthService, cookieDoma
 	c.Redirect(http.StatusTemporaryRedirect, svc.BuildAuthURL(state))
 }
 
-func handleDiscordCallback(c *gin.Context, svc *services.AuthService, cookieDomain string) {
+func handleDiscordCallback(c *gin.Context, svc *services.AuthService, cookieDomain, frontendURL string) {
 	code := c.Query("code")
 	if code == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No code provided"})
@@ -41,29 +44,29 @@ func handleDiscordCallback(c *gin.Context, svc *services.AuthService, cookieDoma
 	}
 	token, err := svc.ExchangeCodeForToken(c.Request.Context(), code)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("oauth: exchange code failed: %v", err)
+		c.JSON(http.StatusBadGateway, gin.H{"error": "Login failed, please try again"})
 		return
 	}
 	userInfo, err := svc.GetDiscordUserInfo(c.Request.Context(), token)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("oauth: fetch discord user failed: %v", err)
+		c.JSON(http.StatusBadGateway, gin.H{"error": "Login failed, please try again"})
 		return
 	}
 	user, err := svc.FindOrCreateUser(userInfo)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("oauth: find/create user failed: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Login failed, please try again"})
 		return
 	}
 	session, err := svc.CreateSession(user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("oauth: create session failed: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Login failed, please try again"})
 		return
 	}
 	c.SetCookie("session_token", session.Token, 60*60*24*7, "/", cookieDomain, true, true)
-	frontendURL := os.Getenv("FRONTEND_URL")
-	if frontendURL == "" {
-		frontendURL = "http://localhost:4200"
-	}
 	c.Redirect(http.StatusTemporaryRedirect, frontendURL)
 }
 

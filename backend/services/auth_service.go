@@ -17,6 +17,8 @@ import (
 	"tierlist/database/models"
 )
 
+var ErrSessionExpired = errors.New("session expired")
+
 type AuthService struct {
 	db   *gorm.DB
 	conf *oauth2.Config
@@ -135,7 +137,7 @@ func (s *AuthService) ResolveSession(token string) (*models.Session, *models.Use
 
 	if time.Now().After(session.ExpiresAt) {
 		s.db.Delete(&session)
-		return nil, nil, errors.New("session expired")
+		return nil, nil, ErrSessionExpired
 	}
 
 	var user models.User
