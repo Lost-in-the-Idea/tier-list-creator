@@ -2,3 +2,4 @@ backend/mainframe.db
 *.env
 backend/tmp/
 .idea/
+readiness-plan.md
