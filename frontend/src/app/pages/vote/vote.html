@@ -35,14 +35,17 @@
       </div>
     }
 
-    <div class="board" cdkDropListGroup>
+    <div class="flex flex-col gap-1 rounded-lg overflow-hidden" cdkDropListGroup>
       @for (tier of tiers(); track tier.label) {
-        <div class="tier-row">
-          <div class="tier-label" [style.background-color]="tier.color">
+        <div class="flex min-h-[84px] bg-base-300">
+          <div
+            class="flex-none w-16 flex items-center justify-center text-[#1a1a1a] font-extrabold text-2xl select-none"
+            [style.background-color]="tier.color"
+          >
             {{ tier.label }}
           </div>
           <div
-            class="tier-items"
+            class="tier-items flex-1 flex flex-wrap content-start gap-1.5 p-1.5 min-h-[84px]"
             cdkDropList
             [id]="tier.label"
             [cdkDropListData]="tier.items"
@@ -51,11 +54,18 @@
             (cdkDropListDropped)="drop($event)"
           >
             @for (item of tier.items; track item.id) {
-              <div class="item" cdkDrag>
+              <div
+                class="item flex flex-col items-center justify-center gap-1 bg-base-100 border border-base-content/15 rounded-[0.4rem] p-1.5 w-[84px] min-h-[72px] text-center text-base-content cursor-grab active:cursor-grabbing shadow-[0_1px_2px_rgba(0,0,0,0.25)] touch-none"
+                cdkDrag
+              >
                 @if (item.image_url) {
-                  <img class="item-img" [src]="item.image_url" [alt]="item.name" />
+                  <img
+                    class="w-14 h-14 object-cover rounded-[0.3rem]"
+                    [src]="item.image_url"
+                    [alt]="item.name"
+                  />
                 }
-                <span class="item-name">{{ item.name }}</span>
+                <span class="text-xs leading-[1.1] break-words">{{ item.name }}</span>
               </div>
             }
           </div>
@@ -68,7 +78,7 @@
         Unranked
       </h2>
       <div
-        class="tier-items pool-items"
+        class="tier-items flex flex-wrap content-start gap-1.5 p-1.5 min-h-[84px] bg-base-300 border border-dashed border-base-content/25 rounded-lg"
         cdkDropList
         [id]="poolId"
         [cdkDropListData]="pool()"
@@ -77,14 +87,21 @@
         (cdkDropListDropped)="drop($event)"
       >
         @for (item of pool(); track item.id) {
-          <div class="item" cdkDrag>
+          <div
+            class="item flex flex-col items-center justify-center gap-1 bg-base-100 border border-base-content/15 rounded-[0.4rem] p-1.5 w-[84px] min-h-[72px] text-center text-base-content cursor-grab active:cursor-grabbing shadow-[0_1px_2px_rgba(0,0,0,0.25)] touch-none"
+            cdkDrag
+          >
             @if (item.image_url) {
-              <img class="item-img" [src]="item.image_url" [alt]="item.name" />
+              <img
+                class="w-14 h-14 object-cover rounded-[0.3rem]"
+                [src]="item.image_url"
+                [alt]="item.name"
+              />
             }
-            <span class="item-name">{{ item.name }}</span>
+            <span class="text-xs leading-[1.1] break-words">{{ item.name }}</span>
           </div>
         } @empty {
-          <p class="empty-hint">All items placed — ready to submit.</p>
+          <p class="text-base-content/55 text-[0.9rem] p-3">All items placed — ready to submit.</p>
         }
       </div>
     </section>

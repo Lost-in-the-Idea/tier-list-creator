@@ -16,7 +16,6 @@ type ResultsView = 'board' | 'details';
   selector: 'app-results',
   imports: [RouterLink, DecimalPipe],
   templateUrl: './results.html',
-  styleUrl: './results.css',
 })
 export class Results {
   private readonly route = inject(ActivatedRoute);

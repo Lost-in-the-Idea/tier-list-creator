@@ -24,7 +24,7 @@ interface TierBucket {
   selector: 'app-vote',
   imports: [CdkDropList, CdkDrag, CdkDropListGroup, RouterLink],
   templateUrl: './vote.html',
-  styleUrl: './vote.css',
+  styleUrl: './vote.cdk.css',
 })
 export class Vote {
   private readonly route = inject(ActivatedRoute);
