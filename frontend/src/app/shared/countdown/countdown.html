@@ -1,0 +1,8 @@
+@if (isExpired()) {
+  <span class="badge badge-error gap-1">Voting closed</span>
+} @else {
+  <span class="badge gap-1" [class.badge-warning]="isUrgent()" [class.badge-ghost]="!isUrgent()">
+    <span aria-hidden="true">⏱</span>
+    {{ display() }}
+  </span>
+}
