@@ -20,6 +20,7 @@
           Drag every item into a tier, then submit. You can only submit once.
         </p>
       </div>
+      <div class="flex flex-col items-end gap-1">
       <button class="btn btn-outline btn-sm shrink-0" type="button" (click)="copyShareLink()">
         @if (copied()) {
           Copied!
@@ -27,6 +28,8 @@
           Copy share link
         }
       </button>
+      <app-countdown [expiresAt]="tl.expires_at" (expired)="onExpired()" />
+      </div>
     </div>
 
     @if (error()) {

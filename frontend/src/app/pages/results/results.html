@@ -15,9 +15,10 @@
       @if (d.tierlist.description) {
         <p class="text-base-content/70">{{ d.tierlist.description }}</p>
       }
-      <p class="text-sm text-base-content/50 mt-1">
-        {{ d.total_submissions }} submission(s)
-      </p>
+      <div class="flex items-center gap-2 mt-1">
+        <p class="text-sm text-base-content/50">{{ d.total_submissions }} submission(s)</p>
+        <app-countdown [expiresAt]="d.tierlist.expires_at" />
+      </div>
     </div>
 
     @if (d.total_submissions === 0) {

@@ -13,6 +13,7 @@ import { AuthService } from '../../core/auth.service';
 import { TierlistService } from '../../core/tierlist.service';
 import { Tierlist, TierlistItem } from '../../core/models';
 import { TIERS } from '../../core/tiers';
+import { Countdown } from '../../shared/countdown/countdown';
 
 interface TierBucket {
   label: string;
@@ -22,7 +23,7 @@ interface TierBucket {
 
 @Component({
   selector: 'app-vote',
-  imports: [CdkDropList, CdkDrag, CdkDropListGroup, RouterLink],
+  imports: [CdkDropList, CdkDrag, CdkDropListGroup, RouterLink, Countdown],
   templateUrl: './vote.html',
   styleUrl: './vote.cdk.css',
 })
@@ -78,6 +79,10 @@ export class Vote {
         );
       },
     });
+  }
+
+  onExpired(): void {
+    this.router.navigate(['/t', this.id, 'results']);
   }
 
   copyShareLink(): void {

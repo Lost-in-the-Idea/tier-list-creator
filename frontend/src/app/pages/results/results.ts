@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TierlistService } from '../../core/tierlist.service';
 import { TierResult, TierlistResultResponse } from '../../core/models';
 import { TIERS, TierDef } from '../../core/tiers';
+import { Countdown } from '../../shared/countdown/countdown';
 
 interface ResultBucket extends TierDef {
   items: TierResult[];
@@ -14,7 +15,7 @@ type ResultsView = 'board' | 'details';
 
 @Component({
   selector: 'app-results',
-  imports: [RouterLink, DecimalPipe],
+  imports: [RouterLink, DecimalPipe, Countdown],
   templateUrl: './results.html',
 })
 export class Results {
