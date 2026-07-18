@@ -7,7 +7,6 @@ import { AuthService } from './core/auth.service';
   selector: 'app-root',
   imports: [RouterOutlet, RouterLink],
   templateUrl: './app.html',
-  styleUrl: './app.css',
 })
 export class App {
   private readonly auth = inject(AuthService);
