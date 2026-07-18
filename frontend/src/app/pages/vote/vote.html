@@ -112,7 +112,7 @@
     <div class="flex items-center gap-3">
       <button
         class="btn btn-primary"
-        [disabled]="!allPlaced() || submitting()"
+        [disabled]="!allPlaced() || submitting() || expired()"
         (click)="submit()"
       >
         @if (submitting()) {

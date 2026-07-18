@@ -41,6 +41,7 @@ export class Vote {
   protected readonly error = signal<string | null>(null);
   protected readonly submitting = signal(false);
   protected readonly copied = signal(false);
+  protected readonly expired = signal(false);
 
   protected readonly tiers = signal<TierBucket[]>(
     TIERS.map((t) => ({ label: t.label, color: t.color, items: [] })),
@@ -82,6 +83,7 @@ export class Vote {
   }
 
   onExpired(): void {
+    this.expired.set(true);
     this.router.navigate(['/t', this.id, 'results']);
   }
 
@@ -132,7 +134,7 @@ export class Vote {
       next: () => this.router.navigate(['/t', this.id, 'results']),
       error: (err) => {
         this.submitting.set(false);
-        if (err?.status === 409) {
+        if (err?.status === 409 || err?.status === 403) {
           this.router.navigate(['/t', this.id, 'results']);
           return;
         }
