@@ -14,10 +14,11 @@ import (
 )
 
 var (
-	ErrNotFound  = errors.New("not found")
-	ErrForbidden = errors.New("forbidden")
-	ErrConflict  = errors.New("already submitted")
-	ErrExpired   = errors.New("voting closed")
+	ErrNotFound        = errors.New("not found")
+	ErrForbidden       = errors.New("forbidden")
+	ErrConflict        = errors.New("already submitted")
+	ErrExpired         = errors.New("voting closed")
+	ErrUniqueViolation = errors.New("only one tierlist allowed at a time")
 )
 
 type TierlistService struct {
@@ -64,6 +65,11 @@ func (s *TierlistService) GetByID(id string, userID *uuid.UUID) (*dto.TierlistRe
 
 func (s *TierlistService) Create(req dto.CreateTierlistRequest, creatorID uuid.UUID) (*dto.CreateTierlistResponse, error) {
 	var result dto.CreateTierlistResponse
+
+	if err := s.db.Where("creator_id = ? AND expiry_time > ?", creatorID, time.Now()).First(&models.Tierlist{}).Error; err == nil {
+		return nil, ErrUniqueViolation
+	}
+
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		tierlist := models.Tierlist{
 			Title:       req.Title,
