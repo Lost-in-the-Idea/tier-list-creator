@@ -55,7 +55,7 @@ func createNewTierlist(c *gin.Context, svc *services.TierlistService) {
 	if err != nil {
 		switch {
 		case errors.Is(err, services.ErrUniqueViolation):
-			c.JSON(http.StatusConflict, gin.H{"error": "Only one active tierlist allowed at a time."})
+			c.JSON(http.StatusConflict, gin.H{"error": "You already have an active tierlist. Wait for it to expire or delete it before creating a new one."})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database Error"})
 		}
