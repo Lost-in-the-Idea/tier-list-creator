@@ -53,7 +53,12 @@ func createNewTierlist(c *gin.Context, svc *services.TierlistService) {
 	creatorID := c.MustGet("user").(models.User).ID
 	result, err := svc.Create(req, creatorID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database Error"})
+		switch {
+		case errors.Is(err, services.ErrUniqueViolation):
+			c.JSON(http.StatusConflict, gin.H{"error": "You already have an active tierlist. Wait for it to expire or delete it before creating a new one."})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database Error"})
+		}
 		return
 	}
 	c.JSON(http.StatusCreated, result)
