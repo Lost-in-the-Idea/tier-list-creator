@@ -69,7 +69,7 @@ export class Results {
       error: (err) => {
         this.loading.set(false);
         this.error.set(
-          err?.status === 404 ? 'Tier list not found.' : 'Failed to load results.',
+          err?.status === 404 ? 'Tierlist not found.' : 'Failed to load results.',
         );
       },
     });

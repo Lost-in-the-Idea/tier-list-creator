@@ -58,7 +58,7 @@ export class Vote {
 
   constructor() {
     if (!this.id) {
-      this.error.set('No tier list specified.');
+      this.error.set('No tierlist specified.');
       this.loading.set(false);
       return;
     }
@@ -76,7 +76,7 @@ export class Vote {
       error: (err) => {
         this.loading.set(false);
         this.error.set(
-          err?.status === 404 ? 'Tier list not found.' : 'Failed to load tier list.',
+          err?.status === 404 ? 'Tierlist not found.' : 'Failed to load tierlist.',
         );
       },
     });

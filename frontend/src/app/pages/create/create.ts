@@ -87,8 +87,8 @@ export class Create {
           this.submitting.set(false);
           this.error.set(
             err?.status === 401
-              ? 'You need to log in to create a tier list.'
-              : err?.error?.error || 'Something went wrong creating the tier list.',
+              ? 'You need to log in to create a tierlist.'
+              : err?.error?.error || 'Something went wrong creating the tierlist.',
           );
         },
       });
